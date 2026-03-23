@@ -1,0 +1,72 @@
+# ── Virtual environment ────────────────────────────────────
+venv/
+
+# ── Datasets (too large for GitHub) ───────────────────────
+archive/
+Project_Resourse/archive/
+benign_pe_files/
+benign_pe_files_v2/
+benign_pe_files_v3/
+Project_Resourse/benign_pe_files/
+benign_images_nataraj/
+benign_images_nataraj_v2/
+benign_images_nataraj_v3/
+Project_Resourse/benign_images_nataraj/
+Project_Resourse/benign_images_256x256/
+ben_byteplot_imgs_zipped/
+malimg_original_restore/
+
+# ── Model weights (too large for GitHub) ──────────────────
+Project_Resourse/models/*.pth
+
+# ── Adversarial test set images (generated, not source) ───
+Project_Resourse/adversarial_test_set/
+
+# ── Log files (generated during training runs) ────────────
+Project_Resourse/logs/*.log
+Project_Resourse/logs/*.png
+Project_Resourse/logs/*.txt
+
+# ── Generated plot images in Project_Resourse root ────────
+Project_Resourse/*.png
+
+# ── Resolved/compiled files ───────────────────────────────
+Project_Resourse/*.resolved
+Project_Resourse/*.resolved.pdf
+
+# ── Scratch/diagnostic text files in EC499 root ───────────
+train_dirs.txt
+train_list.txt
+val_dirs.txt
+val_list.txt
+*.txt
+
+# ── Python cache ───────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+
+# ── VS Code settings (optional, personal preference) ──────
+.vscode/
+
+# ── Large PDF research papers in EC499 root ───────────────
+2016904.2016908.pdf
+2402.15267v1.pdf
+Project_Resourse/adversarial_test_set/
+2016904.2016908.pdf
+benign_images_test/
+benign_images_256x256/
+benign_images_test/
+Project_Resourse/adversarial_test_set/
+2016904.2016908.pdf
+2402.15267v1.pdf
+Adversarial_Robustness_Presentaion.pdf
+Adversarial_Robustness_in_Deep_Learning_Based_Malware_DetectionProjectProposal.pdf
+.gitignore~
+.vscode/
+Project_Resourse/benign_pe_files_test/
+Project_Resourse/logs/
+Project_Resourse/*.png
+Project_Resourse/*.resolved
+Project_Resourse/*.resolved.pdf
+archive.zip

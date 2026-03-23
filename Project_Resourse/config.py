@@ -1,0 +1,57 @@
+import os
+import platform
+from pathlib import Path
+
+# Project root is the directory containing this config file
+PROJECT_ROOT = Path(__file__).resolve().parent
+
+# Define main dataset directories
+BENIGN_PE_DIR = PROJECT_ROOT.parent / "benign_pe_files"
+BENIGN_IMAGES_DIR = PROJECT_ROOT / "benign_images_256x256"
+BENIGN_IMAGES_NATARAJ_DIR = PROJECT_ROOT / "benign_images_nataraj"
+MALIMG_ARCHIVE_DIR = PROJECT_ROOT / "archive" / "malimg_dataset"
+
+# Model and Log directories for Stage 2
+MODEL_OUTPUT_DIR = PROJECT_ROOT / "models"
+LOGS_DIR = PROJECT_ROOT / "logs"
+
+MODEL_OUTPUT_DIR.mkdir(exist_ok=True)
+LOGS_DIR.mkdir(exist_ok=True)
+
+# Testing/Comparison specific
+COMPARISON_PLOT_PATH = PROJECT_ROOT / "comparison_grid.png"
+MALWARE_SAMPLE_DIR = MALIMG_ARCHIVE_DIR / "train" / "Adialer.C"
+
+# Train/Val/Test directories
+TRAIN_DIR = MALIMG_ARCHIVE_DIR / "train"
+VAL_DIR = MALIMG_ARCHIVE_DIR / "val"
+TEST_DIR = MALIMG_ARCHIVE_DIR / "test"
+
+# OS-Specific Source Directories for Benign Collection
+if platform.system() == "Windows":
+    BENIGN_SOURCE_DIRS = [
+        r"C:\Windows\System32",
+        r"C:\Windows\SysWOW64",
+        r"C:\Program Files",          
+        r"C:\Program Files (x86)"     
+    ]
+else:
+    # Linux fallback paths (Note: Linux binaries are ELF, not PE, but kept for compatibility)
+    BENIGN_SOURCE_DIRS = [
+        "/usr/bin",
+        "/bin",
+        "/usr/lib"
+    ]
+
+# String exports for easy compatibility with os.path
+BENIGN_PE_DIR_STR = str(BENIGN_PE_DIR)
+BENIGN_IMAGES_DIR_STR = str(BENIGN_IMAGES_DIR)
+BENIGN_IMAGES_NATARAJ_DIR_STR = str(BENIGN_IMAGES_NATARAJ_DIR)
+MALIMG_ARCHIVE_DIR_STR = str(MALIMG_ARCHIVE_DIR)
+COMPARISON_PLOT_PATH_STR = str(COMPARISON_PLOT_PATH)
+MALWARE_SAMPLE_DIR_STR = str(MALWARE_SAMPLE_DIR)
+CUSTOM_CNN_CLEAN_MODEL_PATH_STR = str(MODEL_OUTPUT_DIR / "custom_cnn_clean_vulnerable.pth")
+RESNET_ADV_TRAINED_MODEL_PATH_STR = str(MODEL_OUTPUT_DIR / "resnet18_adversarially_trained.pth")
+RESNET_CLEAN_MODEL_PATH_STR = str(MODEL_OUTPUT_DIR / "resnet18_clean_vulnerable.pth")
+EFFICIENTNET_CLEAN_MODEL_PATH_STR = str(MODEL_OUTPUT_DIR / "efficientnet_b0_clean_vulnerable.pth")
+EFFICIENTNET_ADV_TRAINED_MODEL_PATH_STR = str(MODEL_OUTPUT_DIR / "efficientnet_b0_adversarially_trained.pth")
