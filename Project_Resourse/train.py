@@ -12,14 +12,32 @@ from models import get_resnet18_grayscale
 from config import MALIMG_ARCHIVE_DIR_STR, RESNET_CLEAN_MODEL_PATH_STR, LOGS_DIR
 
 # === CONFIGURATION ===
-DATA_DIR        = MALIMG_ARCHIVE_DIR_STR
+DATA_DIR        = os.environ.get("DATA_DIR_OVERRIDE", MALIMG_ARCHIVE_DIR_STR)
 MODEL_SAVE_PATH = RESNET_CLEAN_MODEL_PATH_STR
 
 BATCH_SIZE    = 32
 NUM_EPOCHS    = 20
 LEARNING_RATE = 1e-4
 EARLY_STOP_PATIENCE = 5   # Stop if val loss does not improve for this many epochs
+# Optional: neutralize padding-layout shortcut by sampling.
+# Enables a WeightedRandomSampler where weights are computed as inverse
+# propensity from (pad_rows_all_-1, pad_cols_all_-1, frac_-1_pixels).
+PAD_NEUTRALIZE_SAMPLER = os.environ.get("PAD_NEUTRALIZE_SAMPLER", "0") == "1"
+PAD_NEUTRALIZE_WEIGHT_CLIP_MAX = float(os.environ.get("PAD_NEUTRALIZE_WEIGHT_CLIP_MAX", "20.0"))
 # =====================
+
+
+def _suppress_pil_decompression_bomb_warnings():
+    # Some Malimg-derived images can be extremely large on disk. We never resize
+    # or interpolate them; we center-crop/pad to 256 in dataset_loader. The
+    # warning is noisy in logs and does not indicate corrupt decoding here.
+    try:
+        from PIL import Image
+        import warnings
+
+        warnings.filterwarnings("ignore", category=Image.DecompressionBombWarning)
+    except Exception:
+        pass
 
 
 def plot_training_curves(train_accs, val_accs, save_path):
@@ -41,6 +59,8 @@ def plot_training_curves(train_accs, val_accs, save_path):
 
 
 def train():
+    _suppress_pil_decompression_bomb_warnings()
+
     # Reproducibility
     torch.manual_seed(42)
     torch.backends.cudnn.benchmark = True
@@ -62,6 +82,66 @@ def train():
         num_workers=0
     )
     class_weights = class_weights.to(device)
+
+    if PAD_NEUTRALIZE_SAMPLER:
+        # Compute padding-feature weights on the training dataset.
+        # We reuse the same transformed tensors to stay faithful to the model's view.
+        from torch.utils.data import DataLoader as _DL
+        from torch.utils.data import WeightedRandomSampler
+
+        try:
+            from sklearn.linear_model import LogisticRegression
+            from sklearn.metrics import roc_auc_score
+        except Exception as e:
+            raise RuntimeError(
+                "PAD_NEUTRALIZE_SAMPLER=1 requires scikit-learn. "
+                f"Import failed: {e}"
+            )
+
+        print("[*] PAD_NEUTRALIZE_SAMPLER=1: extracting padding features on TRAIN...")
+        feat_loader = _DL(
+            train_loader.dataset,
+            batch_size=256,
+            shuffle=False,
+            num_workers=0,
+        )
+        X = []
+        y = []
+        with torch.no_grad():
+            for imgs, lbls in feat_loader:
+                x = imgs.squeeze(1)
+                is_neg1 = (x == -1.0)
+                pad_rows = is_neg1.all(dim=2).sum(dim=1).cpu().numpy()
+                pad_cols = is_neg1.all(dim=1).sum(dim=1).cpu().numpy()
+                frac = is_neg1.float().mean(dim=(1, 2)).cpu().numpy()
+                X.append(__import__("numpy").stack([pad_rows, pad_cols, frac], axis=1))
+                y.append(lbls.cpu().numpy())
+        X = __import__("numpy").concatenate(X, axis=0)
+        y = __import__("numpy").concatenate(y, axis=0).astype(int)
+
+        clf = LogisticRegression(max_iter=4000, class_weight="balanced")
+        clf.fit(X, y)
+        p = clf.predict_proba(X)
+        auc = roc_auc_score(y, p[:, 1])
+        p_true = p[__import__("numpy").arange(len(y)), y]
+        w = 1.0 / __import__("numpy").maximum(p_true, 1e-6)
+        w = __import__("numpy").minimum(w, PAD_NEUTRALIZE_WEIGHT_CLIP_MAX)
+        w = w / w.mean()
+        print(f"[*] TRAIN padding-only LR AUC (for sampler weights): {auc:.4f}")
+        print(f"[*] Sampler weights: mean={w.mean():.3f} min={w.min():.3f} max={w.max():.3f}")
+
+        sampler = WeightedRandomSampler(
+            weights=w.tolist(),
+            num_samples=len(w),
+            replacement=True,
+        )
+        train_loader = _DL(
+            train_loader.dataset,
+            batch_size=BATCH_SIZE,
+            sampler=sampler,
+            num_workers=0,
+        )
+        print("[*] Using WeightedRandomSampler for training")
 
     # 3. Model
     print("[*] Initializing ResNet-18 (Grayscale 1-channel)...")

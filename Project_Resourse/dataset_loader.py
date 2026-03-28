@@ -1,10 +1,13 @@
 import os
 import torch
 import numpy as np
+import warnings
+from PIL import Image
 from torchvision import datasets, transforms
+from torchvision.transforms import InterpolationMode
 from torch.utils.data import DataLoader
 
-def get_data_loaders(data_dir, batch_size=32, num_workers=2):
+def get_data_loaders(data_dir, batch_size=32, num_workers=0):
     """
     Creates PyTorch DataLoaders for Train, Val, and Test splits.
     Automatically applies Binary Classification labeling:
@@ -24,33 +27,18 @@ def get_data_loaders(data_dir, batch_size=32, num_workers=2):
     val_dir = os.path.join(data_dir, 'val')
     test_dir = os.path.join(data_dir, 'test')
 
-    # Custom Pad/Crop Transform to maintain original byte structure as suggested in Report Section 10
-    class PadTo256(object):
-        def __call__(self, img):
-            import torchvision.transforms.functional as F
-            w, h = img.size
-            target = 256
-            
-            # 1. If larger than target, crop (preserves byte structure better than resizing)
-            if w > target or h > target:
-                img = F.center_crop(img, (target, target))
-                w, h = img.size
-            
-            # 2. If smaller than target, pad (preserves byte structure)
-            if w < target or h < target:
-                pad_w = target - w
-                pad_h = target - h
-                # Pad right and bottom to maintain top-left alignment of original data
-                img = F.pad(img, (0, 0, pad_w, pad_h), fill=0)
-                
-            return img
+    # Reduce log spam from very large Malimg images.
+    Image.MAX_IMAGE_PIXELS = None
+    warnings.filterwarnings("ignore", category=Image.DecompressionBombWarning)
 
-    data_transforms = transforms.Compose([
+    t_list = [
         transforms.Grayscale(num_output_channels=1),
-        PadTo256(),
+        transforms.Resize((224, 224), interpolation=InterpolationMode.BILINEAR),
         transforms.ToTensor(),
-        transforms.Normalize(mean=[0.5], std=[0.5]) # Standard grayscale normalization
-    ])
+        transforms.Normalize(mean=[0.5], std=[0.5]),  # -> [-1,1]
+    ]
+
+    data_transforms = transforms.Compose(t_list)
 
     # 1. Load the raw datasets using ImageFolder
     # ImageFolder assigns an integer label based on alphabetical folder order
@@ -90,7 +78,10 @@ def get_data_loaders(data_dir, batch_size=32, num_workers=2):
     print("[*] Calculating Class Weights for CrossEntropyLoss...")
     
     # Iterate through the targets and apply our binary logic to get the true counts
-    binary_targets = [raw_train_dataset.target_transform(t) for t in raw_train_dataset.targets]
+    tt = raw_train_dataset.target_transform
+    if tt is None:
+        raise RuntimeError("Internal error: train target_transform not set")
+    binary_targets = [tt(t) for t in raw_train_dataset.targets]
     
     benign_count = binary_targets.count(0)
     malware_count = binary_targets.count(1)

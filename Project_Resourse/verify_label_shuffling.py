@@ -15,7 +15,10 @@ def train_shuffled_labels():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
     # 1. Load loaders
-    train_loader, val_loader, test_loader, class_weights = get_data_loaders(MALIMG_ARCHIVE_DIR_STR, batch_size=32)
+    # Keep num_workers=0 on Linux for reproducibility / CUDA safety.
+    train_loader, val_loader, test_loader, class_weights = get_data_loaders(
+        MALIMG_ARCHIVE_DIR_STR, batch_size=32, num_workers=0
+    )
     
     # Apply label shuffling to the *underlying* dataset
     # Note: raw_train_dataset is accessed via dataset
@@ -56,7 +59,12 @@ def train_shuffled_labels():
     correct = 0
     total = 0
     
+    # Bounded run: large datasets can exceed CI/agent timeouts.
+    MAX_TRAIN_BATCHES = 200
     for batch_idx, (images, labels) in enumerate(train_loader):
+        if batch_idx >= MAX_TRAIN_BATCHES:
+            print(f"[*] Stopping early at batch {batch_idx} (MAX_TRAIN_BATCHES={MAX_TRAIN_BATCHES})")
+            break
         images, labels = images.to(device), labels.float().to(device).unsqueeze(1)
         
         outputs = model(images)

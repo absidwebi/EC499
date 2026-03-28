@@ -1,64 +1,103 @@
-# EC499 Folder Structure Overview
+# EC499 Folder Structure Overview (Updated)
 
-This document provides a comprehensive view of the `EC499` directory structure, highlighting key project files, datasets, and configurations. Note: Large image datasets and virtual environment internals are summarized for readability.
+Last updated: 2026-03-28
 
-## 📁 Root Directory: `EC499/`
+This is the current high-level layout of the EC499 workspace. Large datasets and generated artifacts are summarized.
 
-- **📄 2026904.2016908.pdf**: Reference PDF (669 KB)
-- **📄 2402.15267v1.pdf**: Heavy research paper/PDF (3.8 MB)
-- **📄 Adversarial_Robustness_Presentaion.pdf**: Project presentation (5.6 MB)
-- **📄 Adversarial_Robustness_in_Deep_Learning_Based_Malware_DetectionProjectProposal.pdf**: Project proposal (50 KB)
-- **📄 archive.zip**: Original Malimg dataset compressed (1.17 GB)
-- **📄 train_dirs.txt**: List of training subdirectories
-- **📄 val_dirs.txt**: List of validation subdirectories
-- **📂 benign_images_256x256/**: Staging area for converted benign images
-- **📂 benign_images_test/**: Test batch of benign images
-- **📂 benign_pe_files/**: Collection of raw benign Windows PE (.exe) files
-- **📂 venv/**: Python Virtual Environment (Standard library and dependencies)
-- **📂 Project_Resourse/**: Main project development folder (Detailed below)
+## Directory Tree (high level)
 
----
+```text
+EC499/
+├── 2016904.2016908.pdf
+├── 2402.15267v1.pdf
+├── Adversarial_Robustness_Presentaion.pdf
+├── Adversarial_Robustness_in_Deep_Learning_Based_Malware_DetectionProjectProposal.pdf
+├── AGENTS.md
+├── archive.zip
+├── ben_byteplot_imgs_zipped/
+│   └── byteplot_imgs_RxR/
+│       └── 256/
+├── benign_images_256x256/
+├── benign_images_nataraj_v3/
+├── benign_images_test/
+├── mal_byteplot_imgs_zipped/
+│   └── byteplot_imgs_RxR/
+│       └── 256/
+├── Project_Resourse/
+│   ├── adversarial_test_set/
+│   │   ├── fgsm_eps0.05/
+│   │   │   └── images/
+│   │   └── pgd_eps0.05_steps40/
+│   │       └── images/
+│   ├── archive/
+│   │   ├── malimg_dataset/
+│   │   │   ├── train/
+│   │   │   ├── val/
+│   │   │   └── test/
+│   │   ├── malimg_dataset_leaked_backup/
+│   │   │   ├── train/
+│   │   │   ├── val/
+│   │   │   └── test/
+│   │   ├── malimg_dataset_old_backup/
+│   │   │   ├── train/
+│   │   │   ├── val/
+│   │   │   └── test/
+│   │   ├── malimg_dataset_padmatched/
+│   │   │   ├── train/
+│   │   │   ├── val/
+│   │   │   └── test/
+│   │   └── malimg_dataset_padmatched_v2/
+│   │       ├── train/
+│   │       ├── val/
+│   │       └── test/
+│   ├── benign_images_256x256/
+│   ├── benign_images_nataraj/
+│   ├── benign_pe_files_test/
+│   ├── logs/
+│   ├── models/
+│   └── venv/
+├── run_logs/
+└── .vscode/
+```
 
-## 📂 main Project Development: `Project_Resourse/`
+## Project_Resourse Python Files
 
-This folder contains the core implementation of the Malware Detection pipeline.
+All current `.py` files in `Project_Resourse/`:
 
-### 🐍 Python Scripts (Core Logic)
-- **📄 adversarial_train.py**: Stage 3 script for hardening models against PGD attacks.
-- **📄 collect_benign_pe.py**: Script to gather benign PE files from the OS.
-- **📄 config.py**: Centralized configuration for all paths and global variables.
-- **📄 convert_to_malimg.py**: Converts PE files into Malimg-standard grayscale images.
-- **📄 dataset_loader.py**: PyTorch Dataset/DataLoader implementation with binary mapping.
-- **📄 evaluate_attacks.py**: Script to test model vulnerability against FGSM/PGD.
-- **📄 models.py**: Architecture definitions (Custom CNN & ResNet-18 Grayscale).
-- **📄 split_benign_dataset.py**: Distributes converted benign images into Malimg folders.
-- **📄 train.py**: Standard Stage 2 training script for clean baselines.
-- **📄 verify_benign_collection.py**: Integrity checker for PE files.
-- **📄 check_sizes.py**: Utility to analyze file dimension distribution.
+1. `adversarial_train_efficientnet.py`
+2. `adversarial_train.py`
+3. `build_pad_matched_dataset.py`
+4. `check_hash_overlaps.py`
+5. `check_raw_png_sizes.py`
+6. `check_sizes.py`
+7. `collect_benign_pe.py`
+8. `config.py`
+9. `convert.py`
+10. `convert_to_malimg.py`
+11. `dataset_loader.py`
+12. `evaluate_attacks.py`
+13. `fix_dataset_leakage.py`
+14. `fix_malimg_crossplit_duplicates.py`
+15. `generate_adversarial_test_set.py`
+16. `models.py`
+17. `rebuild_dataset_1to1.py`
+18. `split_benign_dataset.py`
+19. `tmp_split_diag_full.py`
+20. `train_efficientnet.py`
+21. `train_padneutralized_sampler.py`
+22. `train.py`
+23. `verify_benign_collection.py`
+24. `verify_cropping_shortcut.py`
+25. `verify_image_compatibility.py`
+26. `verify_label_shuffling.py`
+27. `verify_noise_images.py`
+28. `verify_no_pad_subset.py`
+29. `verify_padding_shortcut.py`
+30. `verify_pad_matched_subset.py`
+31. `verify_raw_size_shortcut.py`
+32. `verify_visual_duplicates.py`
+33. `visualize_clean_dataset.py`
 
-### 📝 Reports & Documentation
-- **📄 CNN Architecture Design.md**: High-level design notes.
-- **📄 CNN_Architecture_for_Robustness.md**: Research on robust CNN designs.
-- **📄 Malware_Detection_CNN_Architecture_Recommendations.md**: Specific recommendations from literature.
-- **📄 stage2_architecture_report.md**: Summary of Stage 2 findings and decisions.
-- **📄 implementation_plan.md.resolved**: Finalized plan for Stage 1/2.
-- **📄 presentation.md**: Source for the project presentation.
-- **📄 project_proposal.md**: Full project proposal in markdown format.
-
-### 📦 Trained Models (`models/`)
-- **📄 custom_cnn_clean_vulnerable.pth**: Initial experimental CNN weights.
-- **📄 resnet18_clean_vulnerable.pth**: Converged ResNet-18 clean baseline.
-
-### 📊 Dataset Storage (`archive/malimg_dataset/`)
-- **📂 train/**: Training split containing 25 Malware family folders + `benign/`.
-- **📂 val/**: Validation split (Balanced across families).
-- **📂 test/**: Final hold-out test set for evaluation.
-
-### 📈 Logs & Visuals (`logs/`)
-- **📄 attack_evaluation_results.txt**: Metrics from PGD/FGSM evaluations.
-- **📄 stage2_forensic_plot.png**: Visualization of model predictions vs actual pixels.
-- **📄 comparison_grid.png**: Side-by-side comparison of malware families.
-
----
-
-*Note: The `__pycache__` folders and individual image files inside family subdirectories are excluded from this overview for clarity (~24,000+ total image files).*
+Notes:
+- `Project_Resourse` spelling is preserved to match the actual repository folder name.
+- Large binary datasets, model weights, and image files are intentionally not expanded in this document.
