@@ -57,3 +57,13 @@ RESNET_ADV_TRAINED_MODEL_PATH_STR = str(MODEL_OUTPUT_DIR / "resnet18_adversarial
 RESNET_CLEAN_MODEL_PATH_STR = str(MODEL_OUTPUT_DIR / "resnet18_clean_vulnerable.pth")
 EFFICIENTNET_CLEAN_MODEL_PATH_STR = str(MODEL_OUTPUT_DIR / "efficientnet_b0_clean_vulnerable.pth")
 EFFICIENTNET_ADV_TRAINED_MODEL_PATH_STR = str(MODEL_OUTPUT_DIR / "efficientnet_b0_adversarially_trained.pth")
+
+# ============================================================
+# MaleX Dataset Constants (added for MaleX integration)
+# ============================================================
+MALEX_DATASET_DIR = PROJECT_ROOT / "archive" / "malex_dataset"
+MALEX_DATASET_DIR_STR = str(MALEX_DATASET_DIR)
+
+# MaleX-specific model save paths (separate from Malimg models)
+RESNET_MALEX_CLEAN_MODEL_PATH_STR = str(MODEL_OUTPUT_DIR / "resnet18_malex_clean_vulnerable.pth")
+RESNET_MALEX_ADV_MODEL_PATH_STR   = str(MODEL_OUTPUT_DIR / "resnet18_malex_adversarially_trained.pth")

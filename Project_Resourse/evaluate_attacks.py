@@ -22,7 +22,7 @@ Output:
 import torch
 import torch.nn as nn
 
-from config import MALIMG_ARCHIVE_DIR_STR, RESNET_CLEAN_MODEL_PATH_STR, LOGS_DIR
+from config import MALEX_DATASET_DIR_STR, RESNET_MALEX_CLEAN_MODEL_PATH_STR, LOGS_DIR
 from dataset_loader import get_data_loaders
 from models import get_resnet18_grayscale
 
@@ -35,7 +35,7 @@ PGD_CONFIGS   = [
     {"eps": 0.05, "alpha": 0.01,   "steps": 40},
 ]
 criterion = nn.BCEWithLogitsLoss()
-MODEL_PATH = RESNET_CLEAN_MODEL_PATH_STR
+MODEL_PATH = RESNET_MALEX_CLEAN_MODEL_PATH_STR
 # =====================
 
 
@@ -118,7 +118,7 @@ def main():
     # 2. Load Data (test set only needed for evaluation)
     print("[*] Loading test dataset...")
     _, _, test_loader, _ = get_data_loaders(
-        data_dir=MALIMG_ARCHIVE_DIR_STR,
+        data_dir=MALEX_DATASET_DIR_STR,
         batch_size=BATCH_SIZE,
         num_workers=0
     )

@@ -20,8 +20,9 @@ import torch.nn as nn
 import torch.optim as optim
 
 from config import (
-    MALIMG_ARCHIVE_DIR_STR,
-    RESNET_CLEAN_MODEL_PATH_STR,
+    MALEX_DATASET_DIR_STR,
+    RESNET_MALEX_CLEAN_MODEL_PATH_STR,
+    RESNET_MALEX_ADV_MODEL_PATH_STR,
     MODEL_OUTPUT_DIR,
     LOGS_DIR,
 )
@@ -39,7 +40,7 @@ ADV_TRAIN_EPS   = 0.05   # Max perturbation budget
 ADV_TRAIN_ALPHA = 0.01   # Step size per PGD iteration
 ADV_TRAIN_STEPS = 7      # 7-step PGD (Madry Default)
 
-ROBUST_MODEL_SAVE_PATH = str(MODEL_OUTPUT_DIR / "resnet18_adversarially_trained.pth")
+ROBUST_MODEL_SAVE_PATH = RESNET_MALEX_ADV_MODEL_PATH_STR
 
 # Shared loss criterion for attack gradient computation
 _criterion = nn.BCEWithLogitsLoss()
@@ -116,7 +117,7 @@ def main():
     # 2. Load Data
     print("[*] Loading dataset...")
     train_loader, val_loader, _, class_weights = get_data_loaders(
-        data_dir=MALIMG_ARCHIVE_DIR_STR,
+        data_dir=MALEX_DATASET_DIR_STR,
         batch_size=BATCH_SIZE,
         num_workers=0
     )
@@ -124,9 +125,9 @@ def main():
 
     # 3. Load Vulnerable Baseline and Start from Its Weights
     # (Warm-starting from a converged model saves time vs. training from scratch)
-    print(f"[*] Warm-starting from clean model: {RESNET_CLEAN_MODEL_PATH_STR}")
+    print(f"[*] Warm-starting from clean model: {RESNET_MALEX_CLEAN_MODEL_PATH_STR}")
     model = get_resnet18_grayscale().to(device)
-    model.load_state_dict(torch.load(RESNET_CLEAN_MODEL_PATH_STR, map_location=device))
+    model.load_state_dict(torch.load(RESNET_MALEX_CLEAN_MODEL_PATH_STR, map_location=device))
 
     # 4. Loss, Optimizer
     pos_weight = torch.tensor([class_weights[1] / class_weights[0]]).to(device)

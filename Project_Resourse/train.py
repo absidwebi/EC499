@@ -9,11 +9,11 @@ import matplotlib.pyplot as plt
 
 from dataset_loader import get_data_loaders
 from models import get_resnet18_grayscale
-from config import MALIMG_ARCHIVE_DIR_STR, RESNET_CLEAN_MODEL_PATH_STR, LOGS_DIR
+from config import MALEX_DATASET_DIR_STR, RESNET_MALEX_CLEAN_MODEL_PATH_STR, LOGS_DIR
 
 # === CONFIGURATION ===
-DATA_DIR        = os.environ.get("DATA_DIR_OVERRIDE", MALIMG_ARCHIVE_DIR_STR)
-MODEL_SAVE_PATH = RESNET_CLEAN_MODEL_PATH_STR
+DATA_DIR        = MALEX_DATASET_DIR_STR
+MODEL_SAVE_PATH = RESNET_MALEX_CLEAN_MODEL_PATH_STR
 
 BATCH_SIZE    = 32
 NUM_EPOCHS    = 20
@@ -46,7 +46,7 @@ def plot_training_curves(train_accs, val_accs, save_path):
     plt.figure(figsize=(10, 6))
     plt.plot(epochs, train_accs, 'b-o', label='Train Accuracy', linewidth=2)
     plt.plot(epochs, val_accs,   'r-o', label='Val Accuracy',   linewidth=2)
-    plt.title('Training vs Validation Accuracy — ResNet-18 Clean Baseline',
+    plt.title('Training vs Validation Accuracy — ResNet-18 MaleX Clean Baseline',
               fontsize=14)
     plt.xlabel('Epoch')
     plt.ylabel('Accuracy (%)')

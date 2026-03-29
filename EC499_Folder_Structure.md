@@ -1,6 +1,6 @@
 # EC499 Folder Structure Overview (Updated)
 
-Last updated: 2026-03-28
+Last updated: 2026-03-29
 
 This is the current high-level layout of the EC499 workspace. Large datasets and generated artifacts are summarized.
 
@@ -30,6 +30,10 @@ EC499/
 │   │   └── pgd_eps0.05_steps40/
 │   │       └── images/
 │   ├── archive/
+│   │   ├── malex_dataset/
+│   │   │   ├── train/
+│   │   │   ├── val/
+│   │   │   └── test/
 │   │   ├── malimg_dataset/
 │   │   │   ├── train/
 │   │   │   ├── val/
@@ -75,29 +79,40 @@ All current `.py` files in `Project_Resourse/`:
 9. `convert.py`
 10. `convert_to_malimg.py`
 11. `dataset_loader.py`
-12. `evaluate_attacks.py`
-13. `fix_dataset_leakage.py`
-14. `fix_malimg_crossplit_duplicates.py`
-15. `generate_adversarial_test_set.py`
-16. `models.py`
-17. `rebuild_dataset_1to1.py`
-18. `split_benign_dataset.py`
-19. `tmp_split_diag_full.py`
-20. `train_efficientnet.py`
-21. `train_padneutralized_sampler.py`
-22. `train.py`
-23. `verify_benign_collection.py`
-24. `verify_cropping_shortcut.py`
-25. `verify_image_compatibility.py`
-26. `verify_label_shuffling.py`
-27. `verify_noise_images.py`
-28. `verify_no_pad_subset.py`
-29. `verify_padding_shortcut.py`
-30. `verify_pad_matched_subset.py`
-31. `verify_raw_size_shortcut.py`
-32. `verify_visual_duplicates.py`
-33. `visualize_clean_dataset.py`
+14. `evaluate_attacks.py`
+15. `fix_dataset_leakage.py`
+16. `fix_malimg_crossplit_duplicates.py`
+17. `generate_adversarial_test_set.py`
+18. `models.py`
+19. `rebuild_dataset_1to1.py`
+20. `split_benign_dataset.py`
+21. `tmp_split_diag_full.py`
+22. `train_efficientnet.py`
+23. `train_padneutralized_sampler.py`
+24. `train.py`
+25. `build_malex_split.py`
+26. `verify_malex_source.py`
+27. `check_malex_hash_overlaps.py`
+28. `check_malex_labels.py`
+29. `check_malex_shuffle_sanity.py`
+30. `verify_benign_collection.py`
+31. `verify_cropping_shortcut.py`
+32. `verify_image_compatibility.py`
+33. `verify_label_shuffling.py`
+34. `verify_noise_images.py`
+35. `verify_no_pad_subset.py`
+36. `verify_padding_shortcut.py`
+37. `verify_pad_matched_subset.py`
+38. `verify_raw_size_shortcut.py`
+39. `verify_visual_duplicates.py`
+40. `visualize_clean_dataset.py`
 
 Notes:
 - `Project_Resourse` spelling is preserved to match the actual repository folder name.
 - Large binary datasets, model weights, and image files are intentionally not expanded in this document.
+
+## MaleX Run Logs (new)
+
+- `run_logs/train_resnet18_malex_stage2.log`
+- `run_logs/evaluate_attacks_malex_stage3.log`
+- `run_logs/adversarial_train_malex_stage3.log`
