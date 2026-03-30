@@ -76,6 +76,16 @@
 - Transform-time padding noise via `dataset_loader.py` (`PAD_NOISE=1`) that randomizes only the padded bottom-right rectangle.
 **Reason:** Sampling attempts to remove the shortcut signal by balancing exposure; padding noise removes the shortcut at the input level while preserving true content.
 
+### D16 — Add Full Resume Checkpointing for Long MaleX Runs
+**Decision:** Enable full-checkpoint resume in long-running base-model scripts (starting with 3C2D, then pretrained ResNet-18).
+**Reason:** Multi-hour runs should be interruption-safe and allow changing max epochs without losing optimizer/scheduler trajectory.
+**Implementation:** Save and restore model, optimizer, scheduler, epoch index, best metrics, and elapsed time.
+
+### D17 — Pause Stage 3 Finalization Until Base-Model Root Cause Is Found
+**Decision:** Temporarily pause final adversarial benchmarking.
+**Reason:** Both candidate base models failed to show continued validation improvement: 3C2D plateaued after epoch 49 region; pretrained ResNet-18 overfit early.
+**Date:** 2026-03-30
+
 ---
 
 ## Bug Log
@@ -119,6 +129,16 @@
 **Symptom:** Padding-only logistic regression achieves high ROC-AUC using only padding-derived features; trained ResNet-18 exhibits a large logit gap mean (~22 units) despite high accuracy.
 **Cause:** `PadTo256` introduces a structured padded region that is easy for the model to exploit. This is independent of the System32-vs-Malimg benign source issue.
 **Fix (in progress):** Pad-matching control dataset; sampling neutralization; padding noise transform.
+
+### Bug 9 — 3C2D Validation Plateau After Long Run Extension
+**Symptom:** Validation metrics stagnate despite additional epochs and resumed training.
+**Evidence:** Best val loss remained 0.3246 at epoch 49; run continued to epoch 60/70 and early-stopped with no improvement.
+**Impact:** 3C2D cannot be selected as a clearly improving base model beyond the epoch-49 region.
+
+### Bug 10 — Pretrained ResNet-18 Early Overfitting on MaleX
+**Symptom:** Training accuracy rises rapidly (~95.59% by epoch 7) while validation fails to improve and val loss degrades.
+**Evidence:** Best val loss 0.3354 at epoch 3; by epoch 7 val loss increased to 0.4565 with val acc ~85.43%.
+**Impact:** Pretrained model training was manually stopped pending root-cause diagnosis.
 
 ---
 

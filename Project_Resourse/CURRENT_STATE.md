@@ -1,6 +1,6 @@
 # CURRENT_STATE.md
 # EC499 — Current Project State
-**Last updated:** March 2026
+**Last updated:** 2026-03-30
 
 ---
 
@@ -10,13 +10,19 @@
 |---|---|---|
 | Stage 1 — Dataset Preparation | ✅ Updated | v3 benign integrated into Malimg folder structure |
 | Stage 2 — Model Training | ✅ Re-run on v3 | ResNet-18 trained; results still show shortcut signals |
-| Stage 3 — Adversarial Attack & Defense | 🔄 In Progress | Stage 3 Part 1 complete on MaleX; Part 2 adversarial training running |
+| Stage 3 — Adversarial Attack & Defense | ⏸️ Paused | Base-model selection blocked by 3C2D plateau and pretrained ResNet overfitting |
 | Stage 4 — GitHub + Documentation | ✅ Complete | Repo: https://github.com/absidwebi/EC499 |
 | Stage 5 — Dataset Bias Fix | 🔄 In Progress | Now focused on padding-layout shortcut, not System32 size bias |
 
 ---
 
 ## 2. Current Focus
+
+**Immediate blocker (MaleX track):** both base-model candidates have stalled below target validation quality.
+
+- 3C2D (fixed + resume-enabled) plateaued after epoch 49 despite extension to 70 epochs.
+- Pretrained ResNet-18 overfit quickly (train acc increased strongly while val stagnated).
+- Pretrained run has been manually stopped to investigate root cause before continuing Stage 3 finalization.
 
 **Eliminate the padding-layout shortcut introduced by `PadTo256` padding (all -1 region after normalization).**
 
@@ -195,7 +201,7 @@ All models: conv1.weight shape [64,1,7,7] for ResNet or [32,1,3,3] for Efficient
 
 ---
 
-## 7. MaleX Track Status (2026-03-29)
+## 7. MaleX Track Status (2026-03-30)
 
 ### Migration status
 
@@ -220,13 +226,27 @@ All models: conv1.weight shape [64,1,7,7] for ResNet or [32,1,3,3] for Efficient
 - Clean accuracy: 82.26%
 - FGSM and PGD robustness collapses to near-zero at moderate epsilon.
 
-### Stage 3 Part 2 (adversarial training) — running
+### Stage 3 Part 2 (adversarial training) — paused
 
-- Script: `Project_Resourse/adversarial_train.py`
-- Log: `run_logs/adversarial_train_malex_stage3.log`
-- Warm-start from clean MaleX checkpoint: enabled
-- Dataset/class balance loaded correctly (1.0/1.0 class weights)
-- Current state: epoch 1 batch loop in progress; no runtime errors observed
+- Decision: paused until base-model issue is diagnosed.
+- Reason: candidate base models are not improving sufficiently for robust final benchmark.
+
+### Base-model experiment checkpoint summary (new)
+
+- 3C2D run log: `run_logs/train_3c2d_malex_fixed.log`
+  - Best val loss: 0.3246 at epoch 49/50
+  - Best val acc: 85.62% at epoch 52/70
+  - End state: early stopped at epoch 60/70 (train acc 88.40%, val acc 85.50%)
+
+- Pretrained ResNet-18 run log: `run_logs/train_resnet_pretrained_malex.log`
+  - Best val loss (current): 0.3354 at epoch 3/50
+  - Best val acc (current): 85.53% at epoch 4/50
+  - Latest before stop: epoch 7/50 (train acc 95.59%, val acc 85.43%, val loss 0.4565)
+
+Conclusion:
+- 3C2D: plateau after epoch 49 region.
+- Pretrained ResNet-18: overfitting trend.
+- Next action: root-cause analysis before re-running Task C/D final pipeline.
 
 ### Important note on split leakage check
 

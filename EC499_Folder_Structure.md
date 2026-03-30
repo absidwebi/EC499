@@ -1,6 +1,6 @@
 # EC499 Folder Structure Overview (Updated)
 
-Last updated: 2026-03-29
+Last updated: 2026-03-30
 
 This is the current high-level layout of the EC499 workspace. Large datasets and generated artifacts are summarized.
 
@@ -95,17 +95,21 @@ All current `.py` files in `Project_Resourse/`:
 27. `check_malex_hash_overlaps.py`
 28. `check_malex_labels.py`
 29. `check_malex_shuffle_sanity.py`
-30. `verify_benign_collection.py`
-31. `verify_cropping_shortcut.py`
-32. `verify_image_compatibility.py`
-33. `verify_label_shuffling.py`
-34. `verify_noise_images.py`
-35. `verify_no_pad_subset.py`
-36. `verify_padding_shortcut.py`
-37. `verify_pad_matched_subset.py`
-38. `verify_raw_size_shortcut.py`
-39. `verify_visual_duplicates.py`
-40. `visualize_clean_dataset.py`
+30. `fix_malex_split_overlaps.py`
+31. `fix_malex_val_test_overlaps.py`
+32. `train_3c2d.py`
+33. `train_resnet_pretrained.py`
+34. `verify_benign_collection.py`
+35. `verify_cropping_shortcut.py`
+36. `verify_image_compatibility.py`
+37. `verify_label_shuffling.py`
+38. `verify_noise_images.py`
+39. `verify_no_pad_subset.py`
+40. `verify_padding_shortcut.py`
+41. `verify_pad_matched_subset.py`
+42. `verify_raw_size_shortcut.py`
+43. `verify_visual_duplicates.py`
+44. `visualize_clean_dataset.py`
 
 Notes:
 - `Project_Resourse` spelling is preserved to match the actual repository folder name.
@@ -116,3 +120,11 @@ Notes:
 - `run_logs/train_resnet18_malex_stage2.log`
 - `run_logs/evaluate_attacks_malex_stage3.log`
 - `run_logs/adversarial_train_malex_stage3.log`
+- `run_logs/train_3c2d_malex_fixed.log`
+- `run_logs/train_resnet_pretrained_malex.log`
+
+## Current Training State (2026-03-30)
+
+- 3C2D run (`train_3c2d.py`) reached a plateau after the epoch-49 region and early-stopped at epoch 60/70.
+- Pretrained ResNet-18 run (`train_resnet_pretrained.py`) showed overfitting and was manually stopped.
+- Both scripts now support resume checkpoints for interruption-safe continuation.

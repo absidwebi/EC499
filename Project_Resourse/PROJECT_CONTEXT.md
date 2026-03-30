@@ -259,6 +259,38 @@ The pipeline has pivoted to MaleX byteplot images for the active training/robust
     - PGD eps 0.02 steps 20: 0.44%
     - PGD eps 0.05 steps 40: 0.00%
 
+---
+
+## 10. MaleX Base-Model Update (2026-03-30)
+
+Current status after completing the extended 3C2D run and starting pretrained ResNet-18 fine-tuning:
+
+- `train_3c2d.py` was upgraded to resume-safe training with full checkpoint state
+    (model, optimizer, scheduler, best metrics).
+- 3C2D training was extended from 50 to 70 epochs and resumed from checkpoint.
+- Early stopping triggered at epoch 60 with best validation loss still at epoch 49.
+- Pretrained ResNet-18 (`train_resnet_pretrained.py`) reached high training accuracy
+    quickly but validation did not improve meaningfully after early epochs.
+
+Observed metrics from logs:
+
+- 3C2D best val loss: 0.3246 at epoch 49 (val acc 85.56%)
+- 3C2D best val acc: 85.62% at epoch 52
+- 3C2D stop point: epoch 60/70, val loss 0.3247, val acc 85.50%
+
+- Pretrained ResNet-18 best val loss (so far): 0.3354 at epoch 3/50
+- Pretrained ResNet-18 best val acc (so far): 85.53% at epoch 4/50
+- Pretrained ResNet-18 latest before manual stop: epoch 7/50,
+    train acc 95.59%, val acc 85.43%, val loss 0.4565
+
+Interpretation:
+
+- 3C2D is now stable but plateaued and cannot improve beyond the epoch-49 region.
+- Pretrained ResNet-18 shows overfitting (train rises sharply while validation stalls/
+    degrades).
+- Training has been paused to investigate root cause before proceeding with final
+    adversarial benchmarking.
+
 Interpretation: clean MaleX model is highly vulnerable and suitable as the warm-start baseline for adversarial defense training.
 
 ### Stage 3 Part 2 adversarial training (in progress)
