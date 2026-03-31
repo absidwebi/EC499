@@ -21,13 +21,15 @@ import torch.optim as optim
 
 from config import (
     MALEX_DATASET_DIR_STR,
+    MALEX_3C2D_CLEAN_MODEL_PATH_STR,
+    MALEX_3C2D_ADV_MODEL_PATH_STR,
     RESNET_MALEX_CLEAN_MODEL_PATH_STR,
     RESNET_MALEX_ADV_MODEL_PATH_STR,
-    MODEL_OUTPUT_DIR,
+    RESNET_MALEX_PRETRAINED_CLEAN_PATH_STR,
     LOGS_DIR,
 )
 from dataset_loader import get_data_loaders
-from models import get_resnet18_grayscale
+from models import MaleX3C2D, get_resnet18_grayscale, get_resnet18_pretrained_grayscale
 
 # === CONFIGURATION ===
 BATCH_SIZE    = 16
@@ -40,7 +42,8 @@ ADV_TRAIN_EPS   = 0.05   # Max perturbation budget
 ADV_TRAIN_ALPHA = 0.01   # Step size per PGD iteration
 ADV_TRAIN_STEPS = 7      # 7-step PGD (Madry Default)
 
-ROBUST_MODEL_SAVE_PATH = RESNET_MALEX_ADV_MODEL_PATH_STR
+# Model options: "3c2d", "resnet", "resnet_pretrained"
+MODEL_VARIANT = "3c2d"
 
 # Shared loss criterion for attack gradient computation
 _criterion = nn.BCEWithLogitsLoss()
@@ -66,8 +69,36 @@ def pgd_attack(model, images, labels, eps, alpha, steps):
     return adv_images
 
 
-LOG_PATH = LOGS_DIR / "adversarial_training_log.txt"
 # =====================
+
+
+def get_model_bundle(model_variant):
+    variant = model_variant.lower().strip()
+    if variant == "3c2d":
+        return (
+            "MaleX3C2D",
+            MaleX3C2D(),
+            MALEX_3C2D_CLEAN_MODEL_PATH_STR,
+            MALEX_3C2D_ADV_MODEL_PATH_STR,
+        )
+    if variant == "resnet":
+        return (
+            "ResNet-18",
+            get_resnet18_grayscale(),
+            RESNET_MALEX_CLEAN_MODEL_PATH_STR,
+            RESNET_MALEX_ADV_MODEL_PATH_STR,
+        )
+    if variant == "resnet_pretrained":
+        return (
+            "ResNet-18 Pretrained",
+            get_resnet18_pretrained_grayscale(),
+            RESNET_MALEX_PRETRAINED_CLEAN_PATH_STR,
+            RESNET_MALEX_ADV_MODEL_PATH_STR,
+        )
+    raise ValueError(
+        f"Unsupported MODEL_VARIANT='{model_variant}'. "
+        "Use one of: '3c2d', 'resnet', 'resnet_pretrained'."
+    )
 
 
 def evaluate_accuracy(model, loader, device):
@@ -103,6 +134,7 @@ def evaluate_robust_accuracy_manual(model, loader, device):
 
 
 def main():
+    torch.manual_seed(42)
     print("=" * 60)
     print("  Stage 3 — Part 2: Adversarial Training Defense")
     print("=" * 60)
@@ -112,6 +144,7 @@ def main():
     if device.type == 'cuda':
         torch.backends.cudnn.benchmark = True
     print(f"[*] Using device: {device}")
+    print(f"[*] Selected model variant: {MODEL_VARIANT}")
     print(f"[*] PGD config for training: ε={ADV_TRAIN_EPS}, α={ADV_TRAIN_ALPHA}, steps={ADV_TRAIN_STEPS}")
 
     # 2. Load Data
@@ -125,9 +158,10 @@ def main():
 
     # 3. Load Vulnerable Baseline and Start from Its Weights
     # (Warm-starting from a converged model saves time vs. training from scratch)
-    print(f"[*] Warm-starting from clean model: {RESNET_MALEX_CLEAN_MODEL_PATH_STR}")
-    model = get_resnet18_grayscale().to(device)
-    model.load_state_dict(torch.load(RESNET_MALEX_CLEAN_MODEL_PATH_STR, map_location=device))
+    model_name, model, clean_model_path, robust_model_save_path = get_model_bundle(MODEL_VARIANT)
+    print(f"[*] Warm-starting {model_name} from clean model: {clean_model_path}")
+    model = model.to(device)
+    model.load_state_dict(torch.load(clean_model_path, map_location=device))
 
     # 4. Loss, Optimizer
     pos_weight = torch.tensor([class_weights[1] / class_weights[0]]).to(device)
@@ -202,7 +236,7 @@ def main():
         # Save best model based on robust validation accuracy
         if robust_val_acc > best_robust_val_acc:
             print(f"  ⭐ Robust val acc improved ({best_robust_val_acc:.2f}% → {robust_val_acc:.2f}%). Saving model...")
-            torch.save(model.state_dict(), ROBUST_MODEL_SAVE_PATH)
+            torch.save(model.state_dict(), robust_model_save_path)
             best_robust_val_acc = robust_val_acc
 
         print("-" * 60)
@@ -210,13 +244,15 @@ def main():
     total_time = time.time() - start_time
     print(f"\n🎉 Adversarial Training Complete in {total_time/60:.2f} minutes!")
     print(f"   Best Robust Val Accuracy: {best_robust_val_acc:.2f}%")
-    print(f"   Robust Model saved to: {ROBUST_MODEL_SAVE_PATH}")
+    print(f"   Robust Model saved to: {robust_model_save_path}")
     print("\n→ Run evaluate_attacks.py again on the new robust model to compare results.")
 
     # Write log
-    with open(LOG_PATH, "w") as f:
+    model_tag = MODEL_VARIANT.lower().replace(" ", "_")
+    log_path = LOGS_DIR / f"adversarial_training_log_{model_tag}.txt"
+    with open(log_path, "w") as f:
         f.writelines(log_lines)
-    print(f"   Training log saved to: {LOG_PATH}")
+    print(f"   Training log saved to: {log_path}")
 
 if __name__ == "__main__":
     main()

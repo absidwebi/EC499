@@ -1,361 +1,196 @@
 # PROJECT_CONTEXT.md
-# EC499 — Adversarial Robustness in Deep Learning-Based Malware Detection
+# EC499 - Adversarial Robustness in Deep Learning-Based Malware Detection
 
-**Student:** Abdulsalam Ashraf Aldwebi (ID: 2210245306)
-**Supervisor:** Dr. Suad Elgeder | University of Tripoli
-**GitHub:** https://github.com/absidwebi/EC499
-**Primary Machine:** Ubuntu PC, RTX 4060, `/home/alucard-00/EC499/`
-**Python Environment:** `/home/alucard-00/EC499/Project_Resourse/venv/` (Python 3.10.12)
+Student: Abdulsalam Ashraf Aldwebi (ID: 2210245306)
+Supervisor: Dr. Suad Elgeder | University of Tripoli
+GitHub: https://github.com/absidwebi/EC499
+Primary Machine: Ubuntu, RTX 4060, /home/alucard-00/EC499/
+Python Environment (active and verified): /home/alucard-00/EC499/Project_Resourse/venv/
 
----
-
-## 1. Problem Definition
-
-Deep learning malware detectors are vulnerable to adversarial attacks — imperceptible perturbations to malicious PE files that cause misclassification as benign while preserving malicious functionality. This project builds, attacks, and defends an image-based malware classifier.
-
-**Binary classification task:** Benign (0) vs Malware (1)
+Last updated: 2026-03-31
 
 ---
 
-## 2. Approach — PE File to Grayscale Image
+## 1. Project Objective
 
-Raw PE binary files are read byte-by-byte. Each byte (0–255) maps directly to a pixel grayscale value. The byte array is reshaped into a 2D image using the Nataraj (2011) variable-width method.
+Build a reproducible malware image classification pipeline and evaluate adversarial vulnerability/defense under controlled methodology.
 
-**Nataraj Width Table:**
+Binary task:
+- Benign = 0
+- Malware = 1
 
-| File Size | Image Width |
-|---|---|
-| < 10 KB | 32 px |
-| 10–30 KB | 64 px |
-| 30–60 KB | 128 px |
-| 60–100 KB | 256 px |
-| 100–200 KB | 384 px |
-| 200–500 KB | 512 px |
-| 500 KB–1 MB | 768 px |
-| > 1 MB | 1024 px |
-
-Height = ceil(file_size / width). Final image is zero-padded to fill the last row if needed.
-
-**CRITICAL:** NO interpolation is ever used. Bilinear/bicubic resizing blurs byte-level textures and creates structural artifacts that models exploit as shortcuts.
+Core rule set maintained in all active scripts:
+- Single-logit output + BCEWithLogitsLoss
+- Adversarial clamp range is always [-1.0, 1.0]
+- No interpolation artifacts in malware-image preprocessing logic
+- `num_workers=0` for Linux CUDA stability
 
 ---
 
-## 3. Dataset Description
+## 2. Active Data Track
 
-### 3.1 Malware Dataset — Malimg (Kaggle)
+Current active branch for Stage 2/3 is MaleX byteplot data.
 
-- 9,339 total images across 25 malware families
-- Already split into train/val/test by Kaggle
-- Dominant family: Allaple.A (2,949 images, 31.6% of dataset) — large worm, 512–768px wide images
-- After cross-split deduplication: Yuner.A has 640 train samples, 0 val/test
-- 669 internal train duplicates (known Malimg property)
+Source roots:
+- Benign: /home/alucard-00/EC499/ben_byteplot_imgs_zipped/byteplot_imgs_RxR/256/
+- Malware: /home/alucard-00/EC499/mal_byteplot_imgs_zipped/byteplot_imgs_RxR/256/
 
-**Final split sizes after deduplication and benign integration:**
-**Final split sizes (CURRENT v3 benign integrated):**
-- Train: 22,288 (14,829 benign + 7,459 malware)
-- Val: 2,663 (1,853 benign + 810 malware)
-- Test: 2,702 (1,855 benign + 847 malware)
+Working split root:
+- /home/alucard-00/EC499/Project_Resourse/archive/malex_dataset/
 
-### 3.2 Benign Dataset
-
-**Original (BIASED — replaced):** ~13,147 images from Windows System32/SysWOW64. Problem: mostly < 60 KB files producing sparse 32px/64px images. Creates structural separation from dense malware images.
-
-**New v3 (CURRENT):** 18,541 PE files from:
-- PortableApps (12,200+ files, 80+ different applications)
-- Program Files: MATLAB, Altium, Microsoft Office, PowerShell, Git, Proton, KiCad, NVIDIA (each capped at 500 files via per-vendor limit)
-- Size filter: 50 KB minimum, 200 MB maximum
-- Width distribution: 0% at 32/64px, 5.6% at 128px, 14.6% at 256px, 19.3% at 384px, 23.5% at 512px, 13.2% at 768px, 23.8% at 1024px
-
-**Location on Windows:** `C:\Users\الصدارة\Desktop\EC499\benign_images_nataraj_v3\`
-**Target on Ubuntu:** `/home/alucard-00/EC499/benign_images_nataraj_v3/`
-
-**Status (CURRENT):** Transferred to Ubuntu and integrated into `Project_Resourse/archive/malimg_dataset/*/benign/`.
-
-### 3.3 Dataset Folder Structure on Ubuntu
-
-```
-Project_Resourse/archive/malimg_dataset/
-├── train/   (26 folders: 25 malware families + benign)
-├── val/     (25 folders: Yuner.A removed, benign present)
-└── test/    (25 folders: Yuner.A removed, benign present)
-```
-
----
-
-## 4. Preprocessing Pipeline
-
-### 4.1 dataset_loader.py — PadTo256 Transform
-
-`PadTo256` preserves byte structure by **crop/pad only** (no interpolation):
-
-```python
-class PadTo256:
-    def __call__(self, img):
-        w = img.width
-        h = img.height
-        target = 256
-        if w > target or h > target:
-            img = F.center_crop(img, [target, target])
-        if w < target or h < target:
-            img = F.pad(img, [0, 0, target-w, target-h], fill=0)
-        return img
-```
-
-**Full transform pipeline:**
-```python
-transforms.Compose([
-    transforms.Grayscale(num_output_channels=1),
-    PadTo256(),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.5], std=[0.5])  # → tensors in [-1, 1]
-])
-```
-
-**Padding shortcut mitigation (CURRENT work):** `dataset_loader.py` supports an optional post-normalization transform that randomizes ONLY the padded bottom-right rectangle:
-- Enable via env: `PAD_NOISE=1` (optional `PAD_NOISE_MODE=uniform|normal`)
-- Purpose: prevent the model from using the “all -1 padded rows/cols” layout as a shortcut.
-
-### 4.2 Binary Label Mapping
-
-ImageFolder assigns integer indices alphabetically. "benign" sits between malware families. A per-split target_transform remaps:
-- benign folder index → 0
-- all other indices → 1
-
-**CRITICAL:** Each split computes its OWN benign index. Yuner.A removal causes benign to shift from index 25 (train) to 24 (val/test).
-
-```python
-idx = split_ds.classes.index('benign')
-split_ds.target_transform = lambda x, i=idx: 0 if x == i else 1
-```
-
-### 4.3 Class Weights
-
-```python
-weight_for_0 = total_samples / (2.0 * benign_count)
-weight_for_1 = total_samples / (2.0 * malware_count)
-pos_weight = class_weights[1] / class_weights[0]  # passed to BCEWithLogitsLoss
-```
-
----
-
-## 5. Model Architectures
-
-### 5.1 ResNet-18 (Primary Model)
-
-```python
-def get_resnet18_grayscale():
-    model = models.resnet18(weights=None)
-    # Modify first conv: 3 channels → 1 channel
-    model.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
-    # Modify classifier head
-    model.fc = nn.Sequential(nn.Dropout(0.4), nn.Linear(512, 1))
-    return model
-```
-
-- Parameters: 11,180,373
-- Input: [B, 1, 256, 256]
-- Output: [B, 1] (single logit)
-- Weights: `models/resnet18_clean_vulnerable.pth`
-- AT weights: `models/resnet18_adversarially_trained.pth`
-
-### 5.2 EfficientNet-B0 (Comparison Model)
-
-```python
-def get_efficientnet_b0_grayscale():
-    model = tv_models.efficientnet_b0(weights=None)
-    model.features[0][0] = nn.Conv2d(1, 32, ...)  # 3→1 channel
-    model.classifier = nn.Sequential(nn.Dropout(0.4), nn.Linear(1280, 1))
-    return model
-```
-
-- Parameters: 4,008,253 (2.79× fewer than ResNet-18)
-- Same input/output format
-- Weights: `models/efficientnet_b0_clean_vulnerable.pth`
-
-### 5.3 CustomCNN (Legacy — superseded by ResNet-18)
-
-4-block CNN: Conv→BN→ReLU→MaxPool × 4, then Flatten→FC(512)→Dropout(0.5)→FC(1)
-Weights: `models/custom_cnn_clean_vulnerable.pth` (kept for reference only)
-
----
-
-## 6. Training Pipeline
-
-**Loss function:** BCEWithLogitsLoss with pos_weight
-**Optimizer:** AdamW, LR=1e-4
-**Scheduler:** ReduceLROnPlateau (factor=0.5, patience=3)
-**Batch size:** 32 (clean training), 16 (adversarial training)
-**Epochs:** 20 with early stopping (patience=5)
-**Seed:** torch.manual_seed(42)
-**num_workers:** 0 (prevents CUDA fork OOM on Linux)
-
-**Key constraint:** NO geometric augmentations (rotations, flips, crops destroy PE byte structure).
-
----
-
-## 7. Attack Implementations
-
-All attacks are manually implemented using BCEWithLogitsLoss (not torchattacks library, which uses CrossEntropyLoss incompatible with binary single-logit output).
-
-**Clamp range: [-1.0, 1.0] throughout (NOT [0, 1])**
-
-```python
-# FGSM
-perturbation = eps * images.grad.sign()
-adv = torch.clamp(images + perturbation, -1.0, 1.0)
-
-# PGD (Madry et al. 2018)
-adv = images + uniform(-eps, eps)  # random start
-for _ in range(steps):
-    adv = adv + alpha * grad.sign()
-    delta = clamp(adv - images, -eps, eps)
-    adv = clamp(images + delta, -1.0, 1.0)
-```
-
-**Adversarial training config:** ε=0.05, α=0.01, 7 steps per batch, warm-started from clean model.
-
----
-
-## 8. Evaluation Metrics
-
----
-
-## 9. MaleX Integration Update (2026-03-29)
-
-The pipeline has pivoted to MaleX byteplot images for the active training/robustness track while keeping Malimg assets for comparison.
-
-### Active MaleX dataset roots
-
-- Source benign: `/home/alucard-00/EC499/ben_byteplot_imgs_zipped/byteplot_imgs_RxR/256/`
-- Source malware: `/home/alucard-00/EC499/mal_byteplot_imgs_zipped/byteplot_imgs_RxR/256/`
-- Working split root: `/home/alucard-00/EC499/Project_Resourse/archive/malex_dataset/`
-
-### MaleX split sizes
-
+MaleX split sizes:
 - Train: 287,560 (143,780 benign + 143,780 malware)
 - Val: 35,944 (17,972 benign + 17,972 malware)
 - Test: 35,946 (17,973 benign + 17,973 malware)
 
-### MaleX clean model training (Stage 2)
-
-- Script: `Project_Resourse/train.py`
-- Output model: `Project_Resourse/models/resnet18_malex_clean_vulnerable.pth`
-- Training log: `run_logs/train_resnet18_malex_stage2.log`
-- Status: completed with early stopping at epoch 7
-- Best validation loss: 0.3695 at epoch 2
-- Epoch 7 metrics: Train Loss 0.0858, Train Acc 96.91%, Val Loss 0.5757, Val Acc 83.16%
-
-### Stage 3 Part 1 attack evaluation (MaleX clean model)
-
-- Script: `Project_Resourse/evaluate_attacks.py`
-- Log: `run_logs/evaluate_attacks_malex_stage3.log`
-- Result summary (`Project_Resourse/logs/attack_evaluation_results.txt`):
-    - Clean: 82.26%
-    - FGSM eps 0.01: 9.88%
-    - FGSM eps 0.02: 1.37%
-    - FGSM eps 0.05: 0.15%
-    - FGSM eps 0.10: 0.00%
-    - PGD eps 0.01 steps 10: 5.91%
-    - PGD eps 0.02 steps 20: 0.44%
-    - PGD eps 0.05 steps 40: 0.00%
+Note:
+- Hash-overlap remediation across splits remains a tracked methodological risk item.
 
 ---
 
-## 10. MaleX Base-Model Update (2026-03-30)
+## 3. Model Candidates Used in Stage 2 Final Selection
 
-Current status after completing the extended 3C2D run and starting pretrained ResNet-18 fine-tuning:
+Evaluated candidates for final clean baseline selection before Stage 3 adversarial training:
+- MaleX3C2D (fixed, resume-capable run lineage)
+- ResNet-18 pretrained grayscale variant
 
-- `train_3c2d.py` was upgraded to resume-safe training with full checkpoint state
-    (model, optimizer, scheduler, best metrics).
-- 3C2D training was extended from 50 to 70 epochs and resumed from checkpoint.
-- Early stopping triggered at epoch 60 with best validation loss still at epoch 49.
-- Pretrained ResNet-18 (`train_resnet_pretrained.py`) reached high training accuracy
-    quickly but validation did not improve meaningfully after early epochs.
+Checkpoints used:
+- 3C2D clean: Project_Resourse/models/3c2d_malex_clean_vulnerable.pth
+- ResNet-18 pretrained clean: Project_Resourse/models/resnet18_malex_pretrained_clean.pth
 
-Observed metrics from logs:
+---
 
-- 3C2D best val loss: 0.3246 at epoch 49 (val acc 85.56%)
-- 3C2D best val acc: 85.62% at epoch 52
-- 3C2D stop point: epoch 60/70, val loss 0.3247, val acc 85.50%
+## 4. Stage 2 Final Evaluation (Completed 2026-03-31)
 
-- Pretrained ResNet-18 best val loss (so far): 0.3354 at epoch 3/50
-- Pretrained ResNet-18 best val acc (so far): 85.53% at epoch 4/50
-- Pretrained ResNet-18 latest before manual stop: epoch 7/50,
-    train acc 95.59%, val acc 85.43%, val loss 0.4565
+Evaluation script created and executed:
+- Project_Resourse/evaluate_base_models_testset.py
+
+Produced artifact:
+- Project_Resourse/base_model_testset_results.json
+
+### 4.1 Test-set metrics (exact)
+
+| Model | Accuracy | F1 Macro | F1 Malware | AUC-ROC | Benign Logit Mean +- Std | Malware Logit Mean +- Std |
+|---|---:|---:|---:|---:|---:|---:|
+| MaleX3C2D | 85.2927% | 0.8525 | 0.8447 | 0.9316 | -2.6726 +- 2.5572 | 3.7370 +- 4.1915 |
+| ResNet-18 Pretrained | 85.2594% | 0.8520 | 0.8430 | 0.9326 | -2.6028 +- 2.3394 | 3.7453 +- 4.0506 |
+
+Confusion matrices:
+- 3C2D: [[14947, 2206], [2648, 13203]]
+- ResNet-18 pretrained: [[15075, 2078], [2787, 13064]]
+
+### 4.2 Benchmark comparison (paper table targets)
+
+Paper baselines provided for comparison:
+- 3C2D benchmark: 83.60%
+- ResNet-18 benchmark: 82.52%
+
+Observed gains on this run:
+- 3C2D: +1.69 percentage points over 83.60%
+- ResNet-18 pretrained: +2.74 percentage points over 82.52%
+
+Selection decision for Stage 3:
+- Selected: MaleX3C2D
+- Rationale: Slight edge in accuracy and malware-focused F1, with essentially tied macro quality.
+
+---
+
+## 5. Stage 3 Preparation and Execution Status
+
+### 5.1 Stage 3 Part 1 attack evaluation (completed)
+
+Script:
+- Project_Resourse/evaluate_attacks.py
+
+Log artifact:
+- Project_Resourse/logs/attack_evaluation_results_3c2d.txt
+
+Latest results (3C2D clean baseline):
+- Clean: 85.29%
+- FGSM eps 0.01: 56.93%
+- FGSM eps 0.02: 34.94%
+- FGSM eps 0.05: 10.45%
+- FGSM eps 0.10: 3.49%
+- PGD eps 0.01 (10 steps): 46.62%
+- PGD eps 0.02 (20 steps): 13.32%
+- PGD eps 0.05 (40 steps): 0.61%
 
 Interpretation:
+- Clean baseline remains strongly vulnerable under stronger FGSM/PGD as expected.
 
-- 3C2D is now stable but plateaued and cannot improve beyond the epoch-49 region.
-- Pretrained ResNet-18 shows overfitting (train rises sharply while validation stalls/
-    degrades).
-- Training has been paused to investigate root cause before proceeding with final
-    adversarial benchmarking.
+### 5.2 Stage 3 Part 2 adversarial training (running)
 
-Interpretation: clean MaleX model is highly vulnerable and suitable as the warm-start baseline for adversarial defense training.
+Script:
+- Project_Resourse/adversarial_train.py
 
-### Stage 3 Part 2 adversarial training (in progress)
-
-- Script: `Project_Resourse/adversarial_train.py`
-- Log: `run_logs/adversarial_train_malex_stage3.log`
-- Warm-start checkpoint: `Project_Resourse/models/resnet18_malex_clean_vulnerable.pth`
-- Robust output path: `Project_Resourse/models/resnet18_malex_adversarially_trained.pth`
-- Current status: active run, epoch 1 in progress (batch-level logging visible)
-
-### Prompt-phase status snapshot (requested reporting format)
-
-| Phase | Status | Notes |
-|---|---|---|
-| Phase 1 | PASS | MaleX source validation passed (sizes/modes/corruption checks) |
-| Phase 2 | PASS | Balanced MaleX split created under `archive/malex_dataset` |
-| Phase 3 | PASS | `config.py` MaleX constants added; import verification passed |
-| Phase 4 | PASS | `dataset_loader.py` replaced for MaleX and self-test passed |
-| Phase 5 | PASS | `train.py`, `evaluate_attacks.py`, `adversarial_train.py` rewired to MaleX |
-| Phase 6A | FAIL | Hash overlap check detected cross-split overlaps |
-| Phase 6B | PASS | Label/tensor/range checks passed |
-| Phase 6C | PASS | Shuffle sanity check stayed near chance-level validation |
-| Phase 7 | PASS | Clean Stage 2 MaleX training completed with early stopping |
-| Stage 3 Part 1 | PASS | Attack vulnerability evaluation completed |
-| Stage 3 Part 2 | RUNNING | Adversarial defense training active |
-
-- Clean accuracy (combined)
-- Split-class: malware recall, benign correct rate
-- Evasion rate = 100 - malware recall under attack
-- Accuracy vs epsilon curve
-- Black-box transfer attack (gradient masking detection)
-- Logit distribution by class
-- Input gradient saliency maps
-
-**Bias/shortcut indicators (CURRENT):**
-- Padding-only LR AUC (from normalized tensors)
-- Logit gap mean (benign vs malware). Large gaps (e.g. ~22 units) indicate shortcut-driven separation.
+Current runtime state (checked via process table):
+- Active process detected: Project_Resourse/venv/bin/python Project_Resourse/adversarial_train.py
+- PID observed at update time: 328551
+- Training is currently in progress.
 
 ---
 
-## 9. Fixed Adversarial Test Set
+## 6. Exact Code Changes Since Previous Context Update
 
-Location: `Project_Resourse/adversarial_test_set/`
-- `fgsm_eps0.05/images/` — 847 adversarial PNGs
-- `pgd_eps0.05_steps40/images/` — 847 adversarial PNGs
+### 6.1 New script
 
-Generated from malware-only test samples using clean ResNet-18. Both clean and AT models are evaluated on the identical pixel values for fair comparison.
+1) Project_Resourse/evaluate_base_models_testset.py
+- Added to perform comprehensive test-set evaluation for the two selected base models.
+- Computes:
+  - Accuracy
+  - Confusion matrix
+  - F1 macro
+  - F1 malware class
+  - ROC-AUC
+  - Per-class logit mean/std
+- Saves structured output JSON to Project_Resourse/base_model_testset_results.json.
+
+Why:
+- Required to finalize Stage 2 model selection with reproducible metrics and direct benchmark comparison.
+
+### 6.2 Updated script
+
+2) Project_Resourse/evaluate_attacks.py
+- Added model variant routing:
+  - `3c2d`
+  - `resnet`
+  - `resnet_pretrained`
+- Default variant set to `3c2d` for current Stage 3 pipeline.
+- Added model-tagged output naming:
+  - attack_evaluation_results_3c2d.txt
+
+Why:
+- Prevent hardcoded model mismatch and make attack evaluation explicitly aligned with selected Stage 2 winner.
+
+3) Project_Resourse/adversarial_train.py
+- Added model variant routing matching attack script.
+- Added clean/robust checkpoint bundle mapping per selected architecture.
+- Set default to `3c2d` for current run.
+- Added `torch.manual_seed(42)` at startup for reproducibility.
+- Fixed final log-writing bug by using correct runtime `log_path` variable.
+- Added model-tagged adversarial training log filename.
+
+Why:
+- Ensure Stage 3 defense training uses intended baseline model and saves outputs under unambiguous names.
 
 ---
 
-## 10. Codebase Reference
+## 7. Known Open Items (Current)
 
-| Script | Purpose |
-|---|---|
-| `config.py` | All path constants |
-| `dataset_loader.py` | DataLoaders, PadTo256, binary labels, class weights |
-| `models.py` | All model definitions |
-| `train.py` | ResNet-18 clean training |
-| `train_efficientnet.py` | EfficientNet-B0 clean training |
-| `adversarial_train.py` | ResNet-18 adversarial training |
-| `adversarial_train_efficientnet.py` | EfficientNet-B0 adversarial training |
-| `evaluate_attacks.py` | FGSM/PGD evaluation |
-| `generate_adversarial_test_set.py` | Fixed adversarial test set generator |
-| `split_benign_dataset.py` | Places benign images into Malimg folder structure |
-| `check_hash_overlaps.py` | Cross-split deduplication check |
-**Shortcut mitigation (CURRENT experiments):** `train.py` supports an optional training-only `WeightedRandomSampler` driven by a padding-only logistic regression on features `(pad_rows_all_-1, pad_cols_all_-1, frac_-1_pixels)`.
-- Enable via env: `PAD_NEUTRALIZE_SAMPLER=1`
-- Optional: `DATA_DIR_OVERRIDE=...`, `PAD_NEUTRALIZE_WEIGHT_CLIP_MAX=...`
+1) MaleX split overlap risk:
+- Cross-split overlap finding remains open and must be resolved before final thesis-grade robustness claims.
+
+2) Stage 3 completion pending:
+- Adversarial training is running and final robust metrics are not yet available.
+
+3) Large untracked binaries in workspace root:
+- Present locally (dataset extractions/archives) and intentionally excluded from commit scope.
+
+---
+
+## 8. Immediate Next Actions (Operational)
+
+1) Let current adversarial training finish; capture best robust validation metrics and output checkpoint.
+2) Re-run attack evaluation against robust model in same FGSM/PGD grid for clean-vs-robust comparison.
+3) Produce final Stage 3 comparison table (clean vs robust) for selected model.
+4) Resolve remaining split-overlap methodological issue before thesis-final benchmark lock.

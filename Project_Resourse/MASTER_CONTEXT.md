@@ -251,3 +251,117 @@ To preserve exact traceability against `AGENT_PROMPT_MaleX_Integration.md`, curr
 - Phase 7: PASS (clean MaleX model training completed)
 - Stage 3 Part 1: PASS (attack vulnerability completed)
 - Stage 3 Part 2: RUNNING (adversarial training in progress)
+
+---
+
+## 2026-03-31 Delta Update (Stage 2 Final Evaluation + Stage 3 Preparation)
+
+### D18 - Stage 2 Final Selector Uses Full Test-Metric Bundle
+Decision:
+- Select the Stage 3 baseline using a combined metric view (accuracy, F1 macro, F1 malware, AUC, confusion matrix, per-class logit stats), not a single metric.
+
+Reason:
+- The two candidates were very close; a single metric could hide class-specific tradeoffs.
+
+Outcome:
+- 3C2D selected for Stage 3 due to slight edge in accuracy and malware F1.
+
+### D19 - Standardize Stage 3 Scripts with Explicit Model Variants
+Decision:
+- Add explicit model-variant routing in both attack evaluation and adversarial training scripts.
+
+Variants:
+- `3c2d`
+- `resnet`
+- `resnet_pretrained`
+
+Reason:
+- Prevent hardcoded model mismatch and make Stage 3 reproducible when switching baselines.
+
+### D20 - Model-Tagged Log Naming
+Decision:
+- Save Stage 3 logs using model-tagged filenames.
+
+Examples:
+- `attack_evaluation_results_3c2d.txt`
+- `adversarial_training_log_3c2d.txt`
+
+Reason:
+- Avoid accidental overwrite and preserve traceability across model variants.
+
+### D21 - Enforce venv Interpreter for All Runs
+Decision:
+- All commands in this cycle were constrained to:
+	`/home/alucard-00/EC499/Project_Resourse/venv/bin/python`
+
+Reason:
+- Ensure dependency consistency and avoid system-Python mismatch.
+
+### D22 - Keep Stage 3 Running While Deferring Unrelated Binary Churn
+Decision:
+- Continue Stage 3 work without acting on unrelated large binary additions under dataset folders.
+
+Reason:
+- Those changes are not part of model-code correctness and would pollute commit scope.
+
+---
+
+## Additional Bug Log Entries (2026-03-31)
+
+### Bug 11 - JSON Serialization Failure in Base-Model Evaluator
+Symptom:
+- `evaluate_base_models_testset.py` computed metrics successfully, then failed while writing JSON.
+
+Cause:
+- Non-serializable NumPy objects (`ndarray`) passed directly to `json.dump`.
+
+Fix:
+- Convert confusion matrix to list and cast scalar outputs to native Python floats.
+
+Impact:
+- Final results now persist in `base_model_testset_results.json` for downstream docs/comparison.
+
+### Bug 12 - Stage 3 Script Hardcoded to One Architecture
+Symptom:
+- `evaluate_attacks.py` and `adversarial_train.py` originally assumed one fixed model path/model class.
+
+Cause:
+- No abstraction for selecting among 3C2D, clean ResNet, and pretrained ResNet flows.
+
+Fix:
+- Added model-bundle helper functions and `MODEL_VARIANT` selector.
+
+Impact:
+- Stage 3 now aligns with Stage 2 selection without manual script rewrites.
+
+### Bug 13 - Incorrect Log Variable in Adversarial Training
+Symptom:
+- End-of-run log write path reference could fail or write to wrong variable.
+
+Cause:
+- Used `LOG_PATH` instead of runtime `log_path` in final write section.
+
+Fix:
+- Use runtime `log_path` consistently.
+
+Impact:
+- Model-tagged adversarial training logs now write predictably.
+
+---
+
+## 2026-03-31 Execution Snapshot
+
+### Stage 2 final evaluation
+- Script: `evaluate_base_models_testset.py`
+- Output: `base_model_testset_results.json`
+- Result: both candidates exceed paper baselines; 3C2D selected.
+
+### Stage 3 part 1
+- Script: `evaluate_attacks.py`
+- Output: `logs/attack_evaluation_results_3c2d.txt`
+- Result: clean model strongly vulnerable under FGSM/PGD, confirming need for defense training.
+
+### Stage 3 part 2
+- Script: `adversarial_train.py`
+- Runtime state at update: active process detected (`PID 328551`).
+

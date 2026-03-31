@@ -22,9 +22,15 @@ Output:
 import torch
 import torch.nn as nn
 
-from config import MALEX_DATASET_DIR_STR, RESNET_MALEX_CLEAN_MODEL_PATH_STR, LOGS_DIR
+from config import (
+    MALEX_DATASET_DIR_STR,
+    MALEX_3C2D_CLEAN_MODEL_PATH_STR,
+    RESNET_MALEX_CLEAN_MODEL_PATH_STR,
+    RESNET_MALEX_PRETRAINED_CLEAN_PATH_STR,
+    LOGS_DIR,
+)
 from dataset_loader import get_data_loaders
-from models import get_resnet18_grayscale
+from models import MaleX3C2D, get_resnet18_grayscale, get_resnet18_pretrained_grayscale
 
 # === CONFIGURATION ===
 BATCH_SIZE    = 32
@@ -35,8 +41,28 @@ PGD_CONFIGS   = [
     {"eps": 0.05, "alpha": 0.01,   "steps": 40},
 ]
 criterion = nn.BCEWithLogitsLoss()
-MODEL_PATH = RESNET_MALEX_CLEAN_MODEL_PATH_STR
+
+# Model options: "3c2d", "resnet", "resnet_pretrained"
+MODEL_VARIANT = "3c2d"
 # =====================
+
+
+def get_model_and_path(model_variant):
+    variant = model_variant.lower().strip()
+    if variant == "3c2d":
+        return "MaleX3C2D", MaleX3C2D(), MALEX_3C2D_CLEAN_MODEL_PATH_STR
+    if variant == "resnet":
+        return "ResNet-18", get_resnet18_grayscale(), RESNET_MALEX_CLEAN_MODEL_PATH_STR
+    if variant == "resnet_pretrained":
+        return (
+            "ResNet-18 Pretrained",
+            get_resnet18_pretrained_grayscale(),
+            RESNET_MALEX_PRETRAINED_CLEAN_PATH_STR,
+        )
+    raise ValueError(
+        f"Unsupported MODEL_VARIANT='{model_variant}'. "
+        "Use one of: '3c2d', 'resnet', 'resnet_pretrained'."
+    )
 
 
 def fgsm_attack(model, images, labels, eps):
@@ -114,6 +140,7 @@ def main():
     # 1. Device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"[*] Using device: {device}")
+    print(f"[*] Selected model variant: {MODEL_VARIANT}")
 
     # 2. Load Data (test set only needed for evaluation)
     print("[*] Loading test dataset...")
@@ -124,9 +151,10 @@ def main():
     )
 
     # 3. Load the Vulnerable Baseline Model
-    print(f"[*] Loading model from: {MODEL_PATH}")
-    model = get_resnet18_grayscale().to(device)
-    model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
+    model_name, model, model_path = get_model_and_path(MODEL_VARIANT)
+    print(f"[*] Loading {model_name} from: {model_path}")
+    model = model.to(device)
+    model.load_state_dict(torch.load(model_path, map_location=device))
     model.eval()
 
     # 4. Baseline Clean Accuracy
@@ -167,9 +195,10 @@ def main():
     print("=" * 60)
 
     # 8. Save results to log file
-    log_path = LOGS_DIR / "attack_evaluation_results.txt"
+    model_tag = MODEL_VARIANT.lower().replace(" ", "_")
+    log_path = LOGS_DIR / f"attack_evaluation_results_{model_tag}.txt"
     with open(log_path, "w") as f:
-        f.write("Stage 3 — Adversarial Attack Evaluation Results\n")
+        f.write(f"Stage 3 — Adversarial Attack Evaluation Results ({model_name})\n")
         f.write("=" * 60 + "\n")
         f.write(f"{'Attack':<35} {'Epsilon':<12} {'Accuracy':>10}\n")
         f.write("-" * 60 + "\n")

@@ -1,130 +1,97 @@
-# EC499 Folder Structure Overview (Updated)
+# EC499 Folder Structure Overview
 
-Last updated: 2026-03-30
+Last updated: 2026-03-31
 
-This is the current high-level layout of the EC499 workspace. Large datasets and generated artifacts are summarized.
+This file captures the current high-level workspace layout and the key files relevant to the active Stage 2/Stage 3 pipeline.
 
-## Directory Tree (high level)
+---
+
+## 1. Top-Level Layout (High Level)
 
 ```text
 EC499/
-├── 2016904.2016908.pdf
-├── 2402.15267v1.pdf
-├── Adversarial_Robustness_Presentaion.pdf
-├── Adversarial_Robustness_in_Deep_Learning_Based_Malware_DetectionProjectProposal.pdf
-├── AGENTS.md
-├── archive.zip
-├── ben_byteplot_imgs_zipped/
-│   └── byteplot_imgs_RxR/
-│       └── 256/
-├── benign_images_256x256/
-├── benign_images_nataraj_v3/
-├── benign_images_test/
-├── mal_byteplot_imgs_zipped/
-│   └── byteplot_imgs_RxR/
-│       └── 256/
-├── Project_Resourse/
-│   ├── adversarial_test_set/
-│   │   ├── fgsm_eps0.05/
-│   │   │   └── images/
-│   │   └── pgd_eps0.05_steps40/
-│   │       └── images/
-│   ├── archive/
-│   │   ├── malex_dataset/
-│   │   │   ├── train/
-│   │   │   ├── val/
-│   │   │   └── test/
-│   │   ├── malimg_dataset/
-│   │   │   ├── train/
-│   │   │   ├── val/
-│   │   │   └── test/
-│   │   ├── malimg_dataset_leaked_backup/
-│   │   │   ├── train/
-│   │   │   ├── val/
-│   │   │   └── test/
-│   │   ├── malimg_dataset_old_backup/
-│   │   │   ├── train/
-│   │   │   ├── val/
-│   │   │   └── test/
-│   │   ├── malimg_dataset_padmatched/
-│   │   │   ├── train/
-│   │   │   ├── val/
-│   │   │   └── test/
-│   │   └── malimg_dataset_padmatched_v2/
-│   │       ├── train/
-│   │       ├── val/
-│   │       └── test/
-│   ├── benign_images_256x256/
-│   ├── benign_images_nataraj/
-│   ├── benign_pe_files_test/
-│   ├── logs/
-│   ├── models/
-│   └── venv/
-├── run_logs/
-└── .vscode/
+|- AGENTS.md
+|- EC499_Folder_Structure.md
+|- ben_byteplot_imgs_zipped/
+|  `- byteplot_imgs_RxR/256/
+|- mal_byteplot_imgs_zipped/
+|  `- byteplot_imgs_RxR/256/
+|- benign_images_nataraj_v3/
+|- Project_Resourse/
+|  |- archive/
+|  |  |- malex_dataset/
+|  |  |  |- train/
+|  |  |  |- val/
+|  |  |  `- test/
+|  |  `- malimg_dataset/
+|  |- logs/
+|  |- models/
+|  |- venv/
+|  `- *.py scripts
+`- run_logs/
 ```
 
-## Project_Resourse Python Files
-
-All current `.py` files in `Project_Resourse/`:
-
-1. `adversarial_train_efficientnet.py`
-2. `adversarial_train.py`
-3. `build_pad_matched_dataset.py`
-4. `check_hash_overlaps.py`
-5. `check_raw_png_sizes.py`
-6. `check_sizes.py`
-7. `collect_benign_pe.py`
-8. `config.py`
-9. `convert.py`
-10. `convert_to_malimg.py`
-11. `dataset_loader.py`
-14. `evaluate_attacks.py`
-15. `fix_dataset_leakage.py`
-16. `fix_malimg_crossplit_duplicates.py`
-17. `generate_adversarial_test_set.py`
-18. `models.py`
-19. `rebuild_dataset_1to1.py`
-20. `split_benign_dataset.py`
-21. `tmp_split_diag_full.py`
-22. `train_efficientnet.py`
-23. `train_padneutralized_sampler.py`
-24. `train.py`
-25. `build_malex_split.py`
-26. `verify_malex_source.py`
-27. `check_malex_hash_overlaps.py`
-28. `check_malex_labels.py`
-29. `check_malex_shuffle_sanity.py`
-30. `fix_malex_split_overlaps.py`
-31. `fix_malex_val_test_overlaps.py`
-32. `train_3c2d.py`
-33. `train_resnet_pretrained.py`
-34. `verify_benign_collection.py`
-35. `verify_cropping_shortcut.py`
-36. `verify_image_compatibility.py`
-37. `verify_label_shuffling.py`
-38. `verify_noise_images.py`
-39. `verify_no_pad_subset.py`
-40. `verify_padding_shortcut.py`
-41. `verify_pad_matched_subset.py`
-42. `verify_raw_size_shortcut.py`
-43. `verify_visual_duplicates.py`
-44. `visualize_clean_dataset.py`
-
 Notes:
-- `Project_Resourse` spelling is preserved to match the actual repository folder name.
-- Large binary datasets, model weights, and image files are intentionally not expanded in this document.
+- Large binary datasets and generated PNG artifacts are intentionally summarized and not expanded in this document.
+- Local workspace contains additional large untracked binaries/archives; these are not part of normal code-commit scope.
 
-## MaleX Run Logs (new)
+---
 
-- `run_logs/train_resnet18_malex_stage2.log`
-- `run_logs/evaluate_attacks_malex_stage3.log`
-- `run_logs/adversarial_train_malex_stage3.log`
-- `run_logs/train_3c2d_malex_fixed.log`
-- `run_logs/train_resnet_pretrained_malex.log`
+## 2. Active Project_Resourse Python Files (Current Focus)
 
-## Current Training State (2026-03-30)
+Primary active scripts for this cycle:
+- `config.py`
+- `dataset_loader.py`
+- `models.py`
+- `train.py`
+- `train_3c2d.py`
+- `train_resnet_pretrained.py`
+- `evaluate_attacks.py`
+- `adversarial_train.py`
+- `evaluate_base_models_testset.py` (new in this update cycle)
 
-- 3C2D run (`train_3c2d.py`) reached a plateau after the epoch-49 region and early-stopped at epoch 60/70.
-- Pretrained ResNet-18 run (`train_resnet_pretrained.py`) showed overfitting and was manually stopped.
-- Both scripts now support resume checkpoints for interruption-safe continuation.
+Other supporting scripts remain present (diagnostics, split tools, legacy experiments).
+
+---
+
+## 3. Key Artifact Files Added/Updated in This Cycle
+
+### 3.1 New results artifact
+- `Project_Resourse/base_model_testset_results.json`
+
+### 3.2 Updated Stage 3 attack output
+- `Project_Resourse/logs/attack_evaluation_results_3c2d.txt`
+
+### 3.3 Relevant model checkpoints currently present
+- `Project_Resourse/models/3c2d_malex_clean_vulnerable.pth`
+- `Project_Resourse/models/3c2d_malex_full_checkpoint.pth`
+- `Project_Resourse/models/resnet18_malex_pretrained_clean.pth`
+- `Project_Resourse/models/resnet18_malex_pretrained_full_checkpoint.pth`
+- `Project_Resourse/models/resnet18_malex_clean_vulnerable.pth`
+- `Project_Resourse/models/resnet18_malex_adversarially_trained.pth`
+
+---
+
+## 4. Run Logs (Representative)
+
+`run_logs/` currently includes:
+- `train_3c2d_malex_fixed.log`
+- `train_resnet_pretrained_malex.log`
+- `train_resnet18_malex_stage2.log`
+- `evaluate_attacks_malex_stage3.log`
+- `adversarial_train_malex_stage3.log`
+
+`Project_Resourse/logs/` includes:
+- `attack_evaluation_results_3c2d.txt`
+- `attack_evaluation_results.txt` (legacy/general)
+- `adversarial_training_log.txt` (legacy/general)
+- additional plots and historical outputs
+
+---
+
+## 5. Current Runtime Status
+
+At update time (2026-03-31), an active Stage 3 training process is present:
+- `Project_Resourse/venv/bin/python Project_Resourse/adversarial_train.py`
+
+This indicates adversarial training is currently ongoing for the selected Stage 3 baseline configuration.
