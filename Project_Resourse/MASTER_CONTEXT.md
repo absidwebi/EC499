@@ -304,6 +304,36 @@ Decision:
 Reason:
 - Those changes are not part of model-code correctness and would pollute commit scope.
 
+### D23 - Complete Initial 3C2D Adversarial Defense Baseline
+Decision:
+- Finalize one full adversarial training baseline pass for the selected 3C2D Stage 3 model before extending runs.
+
+Reason:
+- Establish a concrete defended checkpoint and measurable robustness delta against the clean baseline.
+
+Outcome:
+- Completed run produced best robust validation of 64.91% and saved defended weights.
+
+### D24 - Enforce Live File Logging for Long Stage 3 Runs
+Decision:
+- Launch long-running training/evaluation commands with explicit live file logging in `run_logs/`.
+
+Reason:
+- Terminal-attached output alone is not sufficient for monitoring/recovery and reproducibility trace.
+
+Outcome:
+- Active Stage 3 logs now include explicit tee-based run artifacts.
+
+### D25 - Harden `adversarial_train.py` for Resume-Safe Training
+Decision:
+- Add full-checkpoint resume support, per-epoch checkpointing, curve plotting, and robust-validation early stopping.
+
+Reason:
+- Multi-hour adversarial runs must be interruption-safe and restartable without losing optimizer/scheduler state.
+
+Outcome:
+- Script now supports deterministic continuation and future extension beyond baseline epoch budget.
+
 ---
 
 ## Additional Bug Log Entries (2026-03-31)
@@ -363,5 +393,43 @@ Impact:
 
 ### Stage 3 part 2
 - Script: `adversarial_train.py`
-- Runtime state at update: active process detected (`PID 328551`).
+- Result: completed baseline 3C2D defense run.
+- Best robust validation: 64.91%
+- Final epoch metrics: train loss 0.5619, train acc 65.93%, val clean 73.29%, val robust 64.91%
+- Output checkpoint: `models/3c2d_malex_adversarially_trained.pth`
+
+---
+
+## 2026-04-01 Delta Update (Stage 3 Completion + Comparison)
+
+### S7. Stage 3 defense run completion
+
+- Primary training log: `run_logs/adversarial_train_ 3C2D_Fixed_malex_stage3.log`
+- Internal per-epoch log: `logs/adversarial_training_log_3c2d.txt`
+- Defended checkpoint: `models/3c2d_malex_adversarially_trained.pth`
+
+### S8. Clean vs defended robustness comparison completed
+
+- Comparison run log: `run_logs/evaluate_attacks_3c2d_clean_vs_defended_stage3.log`
+- Structured comparison output: `logs/attack_comparison_3c2d_before_after_stage3.json`
+
+Selected outcomes:
+- Clean accuracy: 85.29% -> 73.07% (tradeoff)
+- FGSM eps=0.10: 3.49% -> 61.16% (+57.67 pp)
+- PGD eps=0.05, steps=40: 0.64% -> 64.61% (+63.98 pp)
+
+Interpretation:
+- Defense achieved major robustness gains under both FGSM and PGD.
+- Clean-performance drop is within expected robustness tradeoff behavior.
+
+### S9. Script hardening applied for next Stage 3 extensions
+
+`adversarial_train.py` now includes:
+- `NUM_EPOCHS = 20`
+- `EARLY_STOP_PATIENCE = 5`
+- `RESUME_IF_CHECKPOINT_EXISTS = True`
+- full-checkpoint save/load helpers
+- per-epoch curve generation and log persistence
+
+This enables safe continuation runs targeting robust val > 65% without restarting from scratch.
 

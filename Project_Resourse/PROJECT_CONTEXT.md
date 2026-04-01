@@ -7,7 +7,7 @@ GitHub: https://github.com/absidwebi/EC499
 Primary Machine: Ubuntu, RTX 4060, /home/alucard-00/EC499/
 Python Environment (active and verified): /home/alucard-00/EC499/Project_Resourse/venv/
 
-Last updated: 2026-03-31
+Last updated: 2026-04-01
 
 ---
 
@@ -118,15 +118,54 @@ Latest results (3C2D clean baseline):
 Interpretation:
 - Clean baseline remains strongly vulnerable under stronger FGSM/PGD as expected.
 
-### 5.2 Stage 3 Part 2 adversarial training (running)
+### 5.2 Stage 3 Part 2 adversarial training (completed)
 
 Script:
 - Project_Resourse/adversarial_train.py
 
-Current runtime state (checked via process table):
-- Active process detected: Project_Resourse/venv/bin/python Project_Resourse/adversarial_train.py
-- PID observed at update time: 328551
-- Training is currently in progress.
+Run log used for this completed run:
+- run_logs/adversarial_train_ 3C2D_Fixed_malex_stage3.log
+
+Final epoch summary from run log:
+- Epoch 5/5
+- Train Loss: 0.5619
+- Train Acc: 65.93%
+- Val Clean: 73.29%
+- Val Robust: 64.91%
+
+Best robust validation metric:
+- Best Robust Val Accuracy: 64.91%
+
+Saved robust checkpoint:
+- Project_Resourse/models/3c2d_malex_adversarially_trained.pth
+
+Training summary log:
+- Project_Resourse/logs/adversarial_training_log_3c2d.txt
+
+### 5.3 Stage 3 clean-vs-defended attack comparison (completed)
+
+Evaluation run log:
+- run_logs/evaluate_attacks_3c2d_clean_vs_defended_stage3.log
+
+Comparison artifact:
+- Project_Resourse/logs/attack_comparison_3c2d_before_after_stage3.json
+
+Before (clean baseline) vs After (defended model):
+
+| Attack | Config | Before | After | Delta |
+|---|---|---:|---:|---:|
+| Clean | - | 85.29% | 73.07% | -12.23pp |
+| FGSM | 0.01 | 56.93% | 71.63% | +14.70pp |
+| FGSM | 0.02 | 34.94% | 70.18% | +35.24pp |
+| FGSM | 0.05 | 10.45% | 66.26% | +55.81pp |
+| FGSM | 0.10 | 3.49% | 61.16% | +57.67pp |
+| PGD | 0.01 (10 steps) | 46.64% | 71.55% | +24.92pp |
+| PGD | 0.02 (20 steps) | 13.32% | 69.92% | +56.60pp |
+| PGD | 0.05 (40 steps) | 0.64% | 64.61% | +63.98pp |
+
+Interpretation:
+- Robustness under FGSM/PGD improved substantially across all attack strengths.
+- Clean accuracy decreased after adversarial training, reflecting robustness-accuracy tradeoff.
 
 ---
 
@@ -163,12 +202,25 @@ Why:
 - Prevent hardcoded model mismatch and make attack evaluation explicitly aligned with selected Stage 2 winner.
 
 3) Project_Resourse/adversarial_train.py
-- Added model variant routing matching attack script.
-- Added clean/robust checkpoint bundle mapping per selected architecture.
-- Set default to `3c2d` for current run.
-- Added `torch.manual_seed(42)` at startup for reproducibility.
-- Fixed final log-writing bug by using correct runtime `log_path` variable.
-- Added model-tagged adversarial training log filename.
+- Previous update (already integrated):
+  - Added model variant routing and model-tagged logging.
+  - Added clean/robust checkpoint bundle mapping and reproducibility seed.
+- New hardening update (2026-04-01):
+  - Increased `NUM_EPOCHS` from 5 to 20.
+  - Added `EARLY_STOP_PATIENCE=5` on robust validation accuracy.
+  - Added full resume capability via checkpoint state:
+    - epoch index
+    - model weights
+    - optimizer state
+    - best robust metric and epoch
+    - no-improve counter
+    - cumulative log lines
+  - Added `RESUME_IF_CHECKPOINT_EXISTS` control flag.
+  - Added per-epoch full checkpoint save path:
+    - `Project_Resourse/models/at_3c2d_full_checkpoint.pth` (variant-tagged path construction)
+  - Added per-epoch training curve generation:
+    - `Project_Resourse/logs/adversarial_training_curve_3c2d.png` (generated on next run with updated script)
+  - Added per-epoch persistent log writing for safer interruption recovery.
 
 Why:
 - Ensure Stage 3 defense training uses intended baseline model and saves outputs under unambiguous names.
@@ -180,8 +232,9 @@ Why:
 1) MaleX split overlap risk:
 - Cross-split overlap finding remains open and must be resolved before final thesis-grade robustness claims.
 
-2) Stage 3 completion pending:
-- Adversarial training is running and final robust metrics are not yet available.
+2) Stage 3 robust run quality threshold:
+- Latest completed defended run reached 64.91% robust validation accuracy, slightly below a 65% target threshold.
+- Updated resume-capable script is now ready for longer continuation without restarting from epoch 1.
 
 3) Large untracked binaries in workspace root:
 - Present locally (dataset extractions/archives) and intentionally excluded from commit scope.
@@ -190,7 +243,7 @@ Why:
 
 ## 8. Immediate Next Actions (Operational)
 
-1) Let current adversarial training finish; capture best robust validation metrics and output checkpoint.
-2) Re-run attack evaluation against robust model in same FGSM/PGD grid for clean-vs-robust comparison.
-3) Produce final Stage 3 comparison table (clean vs robust) for selected model.
-4) Resolve remaining split-overlap methodological issue before thesis-final benchmark lock.
+1) Run extended adversarial training using updated resume-capable `adversarial_train.py` (20-epoch budget + early stop).
+2) Re-run clean-vs-defended comparison after extended training and track whether robust val >= 65% is achieved.
+3) Resolve remaining split-overlap methodological issue before thesis-final benchmark lock.
+4) Keep live run monitoring standardized via run_logs tee pipeline for all long training jobs.
