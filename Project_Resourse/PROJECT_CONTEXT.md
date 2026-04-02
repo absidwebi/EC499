@@ -7,29 +7,29 @@ GitHub: https://github.com/absidwebi/EC499
 Primary Machine: Ubuntu, RTX 4060, /home/alucard-00/EC499/
 Python Environment (active and verified): /home/alucard-00/EC499/Project_Resourse/venv/
 
-Last updated: 2026-04-01
+Last updated: 2026-04-02
 
 ---
 
 ## 1. Project Objective
 
-Build a reproducible malware image classification pipeline and evaluate adversarial vulnerability/defense under controlled methodology.
+Build a reproducible malware image classification pipeline and evaluate adversarial vulnerability and defense under controlled methodology, then deliver a static-analysis inference demo.
 
 Binary task:
 - Benign = 0
 - Malware = 1
 
-Core rule set maintained in all active scripts:
+Core rule set maintained in active scripts:
 - Single-logit output + BCEWithLogitsLoss
-- Adversarial clamp range is always [-1.0, 1.0]
-- No interpolation artifacts in malware-image preprocessing logic
-- `num_workers=0` for Linux CUDA stability
+- Adversarial clamp range [-1.0, 1.0]
+- No geometric augmentation in byteplot pipeline
+- num_workers=0 for Linux CUDA stability
 
 ---
 
 ## 2. Active Data Track
 
-Current active branch for Stage 2/3 is MaleX byteplot data.
+Current active branch for Stage 2/3/4 is MaleX byteplot data.
 
 Source roots:
 - Benign: /home/alucard-00/EC499/ben_byteplot_imgs_zipped/byteplot_imgs_RxR/256/
@@ -38,212 +38,208 @@ Source roots:
 Working split root:
 - /home/alucard-00/EC499/Project_Resourse/archive/malex_dataset/
 
-MaleX split sizes:
+MaleX split sizes (current loader output):
 - Train: 287,560 (143,780 benign + 143,780 malware)
-- Val: 35,944 (17,972 benign + 17,972 malware)
-- Test: 35,946 (17,973 benign + 17,973 malware)
+- Val: 33,015
+- Test: 33,004
 
-Note:
-- Hash-overlap remediation across splits remains a tracked methodological risk item.
+Methodology note:
+- Cross-split overlap remediation is still tracked as an open scientific risk item.
 
 ---
 
-## 3. Model Candidates Used in Stage 2 Final Selection
+## 3. Stage 2 Final Selection (Complete)
 
-Evaluated candidates for final clean baseline selection before Stage 3 adversarial training:
-- MaleX3C2D (fixed, resume-capable run lineage)
+Final clean baseline candidates:
+- MaleX3C2D
 - ResNet-18 pretrained grayscale variant
 
-Checkpoints used:
-- 3C2D clean: Project_Resourse/models/3c2d_malex_clean_vulnerable.pth
-- ResNet-18 pretrained clean: Project_Resourse/models/resnet18_malex_pretrained_clean.pth
-
----
-
-## 4. Stage 2 Final Evaluation (Completed 2026-03-31)
-
-Evaluation script created and executed:
-- Project_Resourse/evaluate_base_models_testset.py
-
-Produced artifact:
+Authoritative artifact:
 - Project_Resourse/base_model_testset_results.json
 
-### 4.1 Test-set metrics (exact)
+Selected Stage 3 baseline:
+- MaleX3C2D
 
-| Model | Accuracy | F1 Macro | F1 Malware | AUC-ROC | Benign Logit Mean +- Std | Malware Logit Mean +- Std |
-|---|---:|---:|---:|---:|---:|---:|
-| MaleX3C2D | 85.2927% | 0.8525 | 0.8447 | 0.9316 | -2.6726 +- 2.5572 | 3.7370 +- 4.1915 |
-| ResNet-18 Pretrained | 85.2594% | 0.8520 | 0.8430 | 0.9326 | -2.6028 +- 2.3394 | 3.7453 +- 4.0506 |
-
-Confusion matrices:
-- 3C2D: [[14947, 2206], [2648, 13203]]
-- ResNet-18 pretrained: [[15075, 2078], [2787, 13064]]
-
-### 4.2 Benchmark comparison (paper table targets)
-
-Paper baselines provided for comparison:
-- 3C2D benchmark: 83.60%
-- ResNet-18 benchmark: 82.52%
-
-Observed gains on this run:
-- 3C2D: +1.69 percentage points over 83.60%
-- ResNet-18 pretrained: +2.74 percentage points over 82.52%
-
-Selection decision for Stage 3:
-- Selected: MaleX3C2D
-- Rationale: Slight edge in accuracy and malware-focused F1, with essentially tied macro quality.
+Reason:
+- Slight edge on accuracy and malware F1 while overall macro quality remained nearly tied.
 
 ---
 
-## 5. Stage 3 Preparation and Execution Status
+## 4. Stage 3 Defense Track (Current)
 
-### 5.1 Stage 3 Part 1 attack evaluation (completed)
+### 4.1 Stage 3 part 1 (clean vulnerability): complete
 
 Script:
 - Project_Resourse/evaluate_attacks.py
 
-Log artifact:
+Artifact:
 - Project_Resourse/logs/attack_evaluation_results_3c2d.txt
 
-Latest results (3C2D clean baseline):
-- Clean: 85.29%
-- FGSM eps 0.01: 56.93%
-- FGSM eps 0.02: 34.94%
-- FGSM eps 0.05: 10.45%
-- FGSM eps 0.10: 3.49%
-- PGD eps 0.01 (10 steps): 46.62%
-- PGD eps 0.02 (20 steps): 13.32%
-- PGD eps 0.05 (40 steps): 0.61%
+Clean baseline collapse under stronger attacks remains confirmed.
 
-Interpretation:
-- Clean baseline remains strongly vulnerable under stronger FGSM/PGD as expected.
+### 4.2 Stage 3 part 2 (PGD adversarial training): continuation run active
 
-### 5.2 Stage 3 Part 2 adversarial training (completed)
-
-Script:
-- Project_Resourse/adversarial_train.py
-
-Run log used for this completed run:
+Primary run log:
 - run_logs/adversarial_train_ 3C2D_Fixed_malex_stage3.log
 
-Final epoch summary from run log:
-- Epoch 5/5
-- Train Loss: 0.5619
-- Train Acc: 65.93%
-- Val Clean: 73.29%
-- Val Robust: 64.91%
+Current runtime state (latest check):
+- PGD adversarial training process is active.
+- Saved full-checkpoint state currently shows:
+  - epoch_zero_based: 14
+  - resume_next_epoch_1based: 16
+  - best_robust_val_acc: 71.5675%
+  - best_epoch: 15
 
-Best robust validation metric:
-- Best Robust Val Accuracy: 64.91%
-
-Saved robust checkpoint:
-- Project_Resourse/models/3c2d_malex_adversarially_trained.pth
-
-Training summary log:
+Checkpoint and model artifacts:
+- Project_Resourse/models/at_3c2d_full_checkpoint.pth
+- Project_Resourse/models/3c2d_malex_adversarially_trained.pth (updated during continuation)
 - Project_Resourse/logs/adversarial_training_log_3c2d.txt
-
-### 5.3 Stage 3 clean-vs-defended attack comparison (completed)
-
-Evaluation run log:
-- run_logs/evaluate_attacks_3c2d_clean_vs_defended_stage3.log
-
-Comparison artifact:
-- Project_Resourse/logs/attack_comparison_3c2d_before_after_stage3.json
-
-Before (clean baseline) vs After (defended model):
-
-| Attack | Config | Before | After | Delta |
-|---|---|---:|---:|---:|
-| Clean | - | 85.29% | 73.07% | -12.23pp |
-| FGSM | 0.01 | 56.93% | 71.63% | +14.70pp |
-| FGSM | 0.02 | 34.94% | 70.18% | +35.24pp |
-| FGSM | 0.05 | 10.45% | 66.26% | +55.81pp |
-| FGSM | 0.10 | 3.49% | 61.16% | +57.67pp |
-| PGD | 0.01 (10 steps) | 46.64% | 71.55% | +24.92pp |
-| PGD | 0.02 (20 steps) | 13.32% | 69.92% | +56.60pp |
-| PGD | 0.05 (40 steps) | 0.64% | 64.61% | +63.98pp |
+- Project_Resourse/logs/adversarial_training_curve_3c2d.png
 
 Interpretation:
-- Robustness under FGSM/PGD improved substantially across all attack strengths.
-- Clean accuracy decreased after adversarial training, reflecting robustness-accuracy tradeoff.
+- The resumed PGD run already moved well beyond the earlier 64.91% robust-val baseline and crossed 71% robust validation.
+
+### 4.3 Fixed adversarial test set + deterministic comparison: complete
+
+Fixed-set generator/output:
+- Project_Resourse/generate_malex_adv_testset.py
+- Project_Resourse/adversarial_test_set_malex/
+  - fgsm_eps0.05/images: 15,851
+  - pgd_eps0.05_steps40/images: 15,851
+
+Fixed-set evaluator:
+- Project_Resourse/evaluate_attacks_fixed.py
+
+All-model fixed-set comparison artifact:
+- run_logs/fixed_adv_eval_all_models_final.log
+- Project_Resourse/logs/fixed_adv_eval_all.txt
+
+Selected deterministic results:
+- Clean model:
+  - Clean accuracy: 85.29%
+  - FGSM fixed recall: 15.29%
+  - PGD fixed recall: 0.53%
+- PGD-defended model:
+  - Clean accuracy: 73.07%
+  - FGSM fixed recall: 58.56%
+  - PGD fixed recall: 58.29%
+- FGSM-defended model:
+  - Clean accuracy: 77.33%
+  - FGSM fixed recall: 67.97%
+  - PGD fixed recall: 67.84%
+
+Interpretation:
+- Deterministic fixed-set evaluation confirms substantial robustness gain over clean baseline for both defended models.
+
+### 4.4 FGSM adversarial training branch: complete
+
+Script:
+- Project_Resourse/adversarial_train_fgsm.py
+
+Artifacts:
+- Project_Resourse/models/3c2d_malex_fgsm_adversarially_trained.pth
+- Project_Resourse/models/at_3c2d_fgsm_full_checkpoint.pth
+- Project_Resourse/logs/adversarial_training_log_fgsm.txt
+- Project_Resourse/logs/adversarial_training_curve_fgsm.png
+
+Final checkpoint metadata:
+- epoch_zero_based: 19 (20 epochs complete)
+- best_robust_val_acc: 72.7306%
+- best_epoch: 19
 
 ---
 
-## 6. Exact Code Changes Since Previous Context Update
+## 5. Stage 4 Inference and Deployment (In Progress)
 
-### 6.1 New script
+### 5.1 Implemented files
 
-1) Project_Resourse/evaluate_base_models_testset.py
-- Added to perform comprehensive test-set evaluation for the two selected base models.
-- Computes:
-  - Accuracy
-  - Confusion matrix
-  - F1 macro
-  - F1 malware class
-  - ROC-AUC
-  - Per-class logit mean/std
-- Saves structured output JSON to Project_Resourse/base_model_testset_results.json.
+- Project_Resourse/inference.py
+  - Static PE validation via pefile (no execution), raw-byte read, Nataraj conversion, OpenCV INTER_AREA resize, normalization to [-1,1], CPU-only model inference.
+- Project_Resourse/app.py
+  - Flask API with /health, /, /predict, upload limit, secure tempfile handling, JSON error mapping.
+- Project_Resourse/templates/index.html
+  - Offline single-file UI with upload flow, spinner, result card, confidence bar, byteplot display, reset flow.
+- Project_Resourse/Dockerfile
+  - Container recipe for CPU inference demo.
 
-Why:
-- Required to finalize Stage 2 model selection with reproducible metrics and direct benchmark comparison.
+### 5.2 Local validation status
 
-### 6.2 Updated script
+Local (non-Docker) checks passed:
+- /health returned model status json.
+- /predict with valid PE returned benign/malware label, confidence, logit, and non-empty image_b64.
+- /predict with non-PE returned validation-error json (400 path).
 
-2) Project_Resourse/evaluate_attacks.py
-- Added model variant routing:
-  - `3c2d`
-  - `resnet`
-  - `resnet_pretrained`
-- Default variant set to `3c2d` for current Stage 3 pipeline.
-- Added model-tagged output naming:
-  - attack_evaluation_results_3c2d.txt
+### 5.3 Current Stage 4 blocker
 
-Why:
-- Prevent hardcoded model mismatch and make attack evaluation explicitly aligned with selected Stage 2 winner.
+Docker build/run testing is currently blocked in this environment:
+- docker command is not installed.
+- sudo install path requires interactive password.
 
-3) Project_Resourse/adversarial_train.py
-- Previous update (already integrated):
-  - Added model variant routing and model-tagged logging.
-  - Added clean/robust checkpoint bundle mapping and reproducibility seed.
-- New hardening update (2026-04-01):
-  - Increased `NUM_EPOCHS` from 5 to 20.
-  - Added `EARLY_STOP_PATIENCE=5` on robust validation accuracy.
-  - Added full resume capability via checkpoint state:
-    - epoch index
-    - model weights
-    - optimizer state
-    - best robust metric and epoch
-    - no-improve counter
-    - cumulative log lines
-  - Added `RESUME_IF_CHECKPOINT_EXISTS` control flag.
-  - Added per-epoch full checkpoint save path:
-    - `Project_Resourse/models/at_3c2d_full_checkpoint.pth` (variant-tagged path construction)
-  - Added per-epoch training curve generation:
-    - `Project_Resourse/logs/adversarial_training_curve_3c2d.png` (generated on next run with updated script)
-  - Added per-epoch persistent log writing for safer interruption recovery.
-
-Why:
-- Ensure Stage 3 defense training uses intended baseline model and saves outputs under unambiguous names.
+Impact:
+- Docker task file is implemented, but container build/run validation is pending environment-level enablement.
 
 ---
 
-## 7. Known Open Items (Current)
+## 6. Code Changes Since Last Context Update
 
-1) MaleX split overlap risk:
-- Cross-split overlap finding remains open and must be resolved before final thesis-grade robustness claims.
+### 6.1 Updated existing script
 
-2) Stage 3 robust run quality threshold:
-- Latest completed defended run reached 64.91% robust validation accuracy, slightly below a 65% target threshold.
-- Updated resume-capable script is now ready for longer continuation without restarting from epoch 1.
+1) Project_Resourse/config.py
+- Added Stage 3 fixed-set and FGSM model-path constants:
+  - MALEX_ADV_TEST_SET_DIR / MALEX_ADV_TEST_SET_DIR_STR
+  - MALEX_3C2D_FGSM_ADV_MODEL_PATH_STR
 
-3) Large untracked binaries in workspace root:
-- Present locally (dataset extractions/archives) and intentionally excluded from commit scope.
+Why:
+- Standardize paths for fixed adversarial set and FGSM defense artifacts across scripts.
+
+### 6.2 New scripts
+
+2) Project_Resourse/generate_malex_adv_testset.py
+- Generates fixed adversarial PNG test subsets from malware test samples using clean 3C2D attacker.
+- Includes verify mode to validate counts, labels, image mode/size.
+
+Why:
+- Remove stochastic variance from repeated on-the-fly PGD generation and enforce deterministic comparisons.
+
+3) Project_Resourse/evaluate_attacks_fixed.py
+- Evaluates clean, PGD-defended, and FGSM-defended models on fixed adversarial subsets.
+- Produces deterministic model-comparison logs in run_logs and logs.
+
+Why:
+- Establish reproducible clean-vs-defended benchmarking on identical adversarial pixels.
+
+4) Project_Resourse/adversarial_train_fgsm.py
+- Parallel FGSM defense training pipeline with resume checkpointing, early stopping, and curve generation.
+
+Why:
+- Build a second defense baseline under same checkpointing and reporting framework.
+
+5) Project_Resourse/inference.py
+- Full static PE-to-prediction inference pipeline aligned with training preprocessing.
+
+Why:
+- Stage 4 deliverable: production-style model inference entry point.
+
+6) Project_Resourse/app.py
+- Flask API and upload workflow around inference engine.
+
+Why:
+- Stage 4 deploy/demo requirement for committee-facing interaction.
 
 ---
 
-## 8. Immediate Next Actions (Operational)
+## 7. Known Open Items and Risks
 
-1) Run extended adversarial training using updated resume-capable `adversarial_train.py` (20-epoch budget + early stop).
-2) Re-run clean-vs-defended comparison after extended training and track whether robust val >= 65% is achieved.
-3) Resolve remaining split-overlap methodological issue before thesis-final benchmark lock.
-4) Keep live run monitoring standardized via run_logs tee pipeline for all long training jobs.
+1) MaleX split-overlap methodological risk remains unresolved.
+2) PGD continuation run is still active; final epoch-20 metrics are not yet frozen.
+3) Docker validation blocked by missing docker binary and privileged install requirement.
+4) Workspace contains large unrelated untracked binaries and archives that must stay out of scoped commits.
+
+---
+
+## 8. Immediate Next Actions
+
+1) Let active PGD continuation run finish and capture final robust-val and best-epoch metrics.
+2) Re-run fixed-set comparison for updated PGD checkpoint if metrics moved materially.
+3) Resolve split-overlap risk and rerun integrity checks for thesis-grade claims.
+4) Complete Docker build/run verification once docker is available in environment.

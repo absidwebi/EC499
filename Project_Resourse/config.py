@@ -71,3 +71,16 @@ MALEX_3C2D_CLEAN_MODEL_PATH_STR = str(MODEL_OUTPUT_DIR / "3c2d_malex_clean_vulne
 MALEX_3C2D_ADV_MODEL_PATH_STR   = str(MODEL_OUTPUT_DIR / "3c2d_malex_adversarially_trained.pth")
 RESNET_MALEX_PRETRAINED_CLEAN_PATH_STR = str(MODEL_OUTPUT_DIR / "resnet18_malex_pretrained_clean.pth")
 RESNET_MALEX_PRETRAINED_ADV_PATH_STR   = str(MODEL_OUTPUT_DIR / "resnet18_malex_pretrained_adversarial.pth")
+
+# ============================================================
+# Stage 3 — Fixed Adversarial Test Set (MaleX)
+# ============================================================
+# Pre-generated adversarial examples from the MaleX test set.
+# Generated once from the clean 3C2D model, reused for all evaluations.
+MALEX_ADV_TEST_SET_DIR = PROJECT_ROOT / "adversarial_test_set_malex"
+MALEX_ADV_TEST_SET_DIR_STR = str(MALEX_ADV_TEST_SET_DIR)
+
+# FGSM adversarial training model paths (separate from PGD-trained model)
+MALEX_3C2D_FGSM_ADV_MODEL_PATH_STR = str(
+    MODEL_OUTPUT_DIR / "3c2d_malex_fgsm_adversarially_trained.pth"
+)

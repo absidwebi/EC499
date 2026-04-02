@@ -433,3 +433,128 @@ Interpretation:
 
 This enables safe continuation runs targeting robust val > 65% without restarting from scratch.
 
+---
+
+## 2026-04-02 Delta Update (Stage 3 Continuation + Stage 4 Implementation)
+
+### D26 - Resume PGD Training from Last Robust State Instead of Restarting
+Decision:
+- Continue PGD adversarial training from saved state and append to the same canonical run log.
+
+Reason:
+- Preserve training history, avoid losing multi-hour compute progress, and satisfy continuity constraints.
+
+Outcome:
+- Full-checkpoint state currently tracks continuation through epoch 15 with best robust val 71.57% and active progress into later epochs.
+
+### D27 - Add Fixed-Set Deterministic Evaluation as Primary Comparison View
+Decision:
+- Use pre-generated fixed adversarial subsets for clean vs defended comparison in addition to on-the-fly attack reports.
+
+Reason:
+- Deterministic pixel-identical adversarial inputs remove run-to-run variance and strengthen scientific reproducibility.
+
+Outcome:
+- Final fixed-set table now includes clean, PGD-defended, and FGSM-defended models under identical FGSM/PGD subsets.
+
+### D28 - Build Parallel FGSM Defense Branch Under Same Resume Framework
+Decision:
+- Add a dedicated FGSM adversarial training script with full checkpoint resume, early stopping, and curves.
+
+Reason:
+- Provide a second defense baseline under the same reporting rigor and allow direct robustness tradeoff comparison.
+
+Outcome:
+- FGSM branch completed all 20 epochs with best robust validation 72.73%.
+
+### D29 - Stage 4 Inference Must Use Strict Static PE Validation (No Bypass)
+Decision:
+- Re-enable strict PE validation in inference pipeline and remove validation-bypass default behavior.
+
+Reason:
+- The deployment proposal requires static analysis; pefile is a static parser and does not execute binaries.
+
+Outcome:
+- Inference pipeline now validates PE structure via pefile and returns structured ValueError JSON for non-PE uploads.
+
+### D30 - Local API First, Docker Pending Environment Enablement
+Decision:
+- Complete and validate local Flask inference flow first; keep Docker validation pending when docker binary is unavailable.
+
+Reason:
+- Environment-level tooling constraints should not block code-level pipeline completion.
+
+Outcome:
+- Local health/predict tests pass end-to-end; Docker build/run remains blocked by missing docker + privileged install requirement.
+
+---
+
+## Additional Bug Log Entries (2026-04-02)
+
+### Bug 14 - Missing PGD Full-Checkpoint in Earlier Baseline Continuation Attempt
+Symptom:
+- Resume metadata query failed to find `at_3c2d_full_checkpoint.pth` in an earlier continuation attempt.
+
+Cause:
+- Initial baseline run lineage did not persist expected full-checkpoint state at that time.
+
+Fix:
+- Re-established full-checkpoint continuity and resumed with explicit checkpoint tracking and append-only log routing.
+
+Impact:
+- Current PGD continuation now has valid resume metadata (epoch, best metric, no-improve counter).
+
+### Bug 15 - Benign Test Path Mismatch for Stage 4 Commands
+Symptom:
+- Guide commands referenced `/home/alucard-00/EC499/benign_pe_files/benign_00001.exe` while local files existed under `Project_Resourse/benign_pe_files_test/`.
+
+Cause:
+- Workspace path naming divergence.
+
+Fix:
+- Added local compatibility symlink to satisfy guide command path without changing scripts.
+
+Impact:
+- Stage 4 command sequence runs consistently in current workspace.
+
+### Bug 16 - Docker Runtime Validation Blocked by Host Tooling
+Symptom:
+- Docker build commands unavailable.
+
+Cause:
+- `docker` binary missing in environment; non-interactive sudo install not permitted.
+
+Fix:
+- Documented blocker and preserved Dockerfile for immediate execution once tooling is available.
+
+Impact:
+- Stage 4 code is ready; container validation pending environment enablement.
+
+---
+
+## 2026-04-02 Execution Snapshot
+
+### Stage 3 continuation (PGD)
+- Script: `adversarial_train.py`
+- Canonical run log: `run_logs/adversarial_train_ 3C2D_Fixed_malex_stage3.log`
+- Current saved checkpoint state:
+	- epoch_zero_based=14 (resume target epoch 16)
+	- best_robust_val_acc=71.57% at epoch 15
+
+### Stage 3 fixed-set pipeline
+- Generator: `generate_malex_adv_testset.py`
+- Evaluator: `evaluate_attacks_fixed.py`
+- Final all-model fixed-set comparison confirms major robustness gains for PGD and FGSM defended models versus clean baseline.
+
+### Stage 3 FGSM branch
+- Script: `adversarial_train_fgsm.py`
+- Completed 20 epochs; best robust val 72.73% at epoch 19.
+
+### Stage 4 inference/demo implementation
+- `inference.py`, `app.py`, `templates/index.html`, `Dockerfile` implemented.
+- Local integration tests pass for:
+	- `GET /health`
+	- `POST /predict` with valid PE
+	- `POST /predict` with non-PE (returns validation error JSON)
+- Docker verification pending host-side docker availability.
+
