@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EC499 — Malware Detection System</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #30363d;
+    --text: #c9d1d9;
+    --muted: #8b949e;
+    --green: #3fb950;
+    --red: #f85149;
+    --blue: #58a6ff;
+    --accent: #1f6feb;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", monospace;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+
+  .container { max-width: 900px; margin: 0 auto; }
+
+  header { text-align: center; margin-bottom: 2.5rem; }
+  header h1 { font-size: 1.8rem; color: var(--blue); letter-spacing: 0.05em; }
+  header p  { color: var(--muted); margin-top: 0.4rem; font-size: 0.9rem; }
+  header .badge {
+    display: inline-block; margin-top: 0.8rem;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--muted); font-size: 0.75rem; padding: 0.2rem 0.7rem;
+    border-radius: 99px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.8rem;
+    margin-bottom: 1.5rem;
+  }
+  .card h2 { font-size: 1rem; color: var(--text); margin-bottom: 1.2rem; }
+
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 6px;
+    padding: 2rem;
+    text-align: center;
+    transition: border-color 0.2s;
+    cursor: pointer;
+  }
+  .upload-zone:hover { border-color: var(--accent); }
+  .upload-zone input[type=file] { display: none; }
+  .upload-zone .icon { font-size: 2.5rem; margin-bottom: 0.6rem; }
+  .upload-zone .hint { color: var(--muted); font-size: 0.85rem; }
+  .upload-zone .selected-name {
+    margin-top: 0.8rem;
+    color: var(--blue);
+    font-size: 0.9rem;
+    word-break: break-all;
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 0.6rem 1.4rem;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: opacity 0.15s;
+  }
+  .btn:hover { opacity: 0.85; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-secondary { background: var(--surface); color: var(--text);
+                   border: 1px solid var(--border); margin-left: 0.8rem; }
+
+  .controls { margin-top: 1.2rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+
+  .toggle-group { display: flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .toggle-group label {
+    padding: 0.4rem 1rem; cursor: pointer; font-size: 0.85rem; color: var(--muted);
+    transition: background 0.15s, color 0.15s;
+  }
+  .toggle-group input[type=radio] { display: none; }
+  .toggle-group input[type=radio]:checked + label {
+    background: var(--accent); color: #fff;
+  }
+
+  /* Result banner */
+  .result-banner {
+    border-radius: 6px;
+    padding: 1.2rem 1.5rem;
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 1.2rem;
+    text-align: center;
+  }
+  .result-banner.malware { background: rgba(248,81,73,0.15); color: var(--red);
+                           border: 1px solid var(--red); }
+  .result-banner.benign  { background: rgba(63,185,80,0.15); color: var(--green);
+                           border: 1px solid var(--green); }
+
+  .meta-row { display: flex; gap: 2rem; margin-bottom: 1.2rem; flex-wrap: wrap; }
+  .meta-item { flex: 1; min-width: 140px; }
+  .meta-item .label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase;
+                      letter-spacing: 0.06em; margin-bottom: 0.3rem; }
+  .meta-item .value { font-size: 1rem; color: var(--text); font-weight: 600; }
+
+  .progress-bar-track {
+    background: var(--border); border-radius: 99px; height: 10px;
+    overflow: hidden; margin-top: 0.4rem;
+  }
+  .progress-bar-fill {
+    height: 100%; border-radius: 99px; transition: width 0.5s ease;
+  }
+  .progress-bar-fill.malware { background: var(--red); }
+  .progress-bar-fill.benign  { background: var(--green); }
+
+  .vis-section { margin-top: 1.2rem; }
+  .vis-section h3 { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.6rem; }
+  .vis-section img {
+    max-width: 100%; border: 1px solid var(--border); border-radius: 4px;
+    image-rendering: pixelated;
+  }
+  .vis-caption { color: var(--muted); font-size: 0.78rem; margin-top: 0.5rem; }
+
+  /* Spinner */
+  .spinner-wrap { text-align: center; padding: 2rem; display: none; }
+  .spinner {
+    display: inline-block; width: 2.5rem; height: 2.5rem;
+    border: 3px solid var(--border); border-top-color: var(--blue);
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner-wrap p { color: var(--muted); margin-top: 0.8rem; font-size: 0.9rem; }
+
+  /* Error */
+  .error-box {
+    background: rgba(248,81,73,0.1); border: 1px solid var(--red);
+    border-radius: 6px; padding: 1rem 1.2rem; color: var(--red);
+    display: none; margin-bottom: 1rem;
+  }
+
+  #resultCard { display: none; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>⚡ EC499 — Malware Detection System</h1>
+    <p>Adversarial Robustness in Deep Learning-Based Malware Detection</p>
+    <span class="badge" id="modelBadge">Model: {{ model_type }}</span>
+  </header>
+
+  <!-- Upload Card -->
+  <div class="card">
+    <h2>Analyze a PE File</h2>
+
+    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+      <div class="icon">📂</div>
+      <p>Click to select a PE file (.exe, .dll, .sys, .ocx)</p>
+      <p class="hint">Maximum 50 MB · Static analysis only · No execution</p>
+      <p class="selected-name" id="selectedName"></p>
+    </div>
+    <input type="file" id="fileInput" accept=".exe,.dll,.sys,.ocx,.bin">
+
+    <div class="controls">
+      <button class="btn btn-primary" id="analyzeBtn" disabled onclick="runPrediction()">
+        🔍 Analyze File
+      </button>
+      <button class="btn btn-secondary" id="resetBtn" onclick="resetForm()" style="display:none">
+        ↺ Analyze Another File
+      </button>
+    </div>
+  </div>
+
+  <!-- Spinner -->
+  <div class="spinner-wrap" id="spinnerWrap">
+    <div class="spinner"></div>
+    <p>Analyzing binary structure…</p>
+  </div>
+
+  <!-- Error -->
+  <div class="error-box" id="errorBox"></div>
+
+  <!-- Result Card -->
+  <div class="card" id="resultCard">
+    <div class="result-banner" id="resultBanner"></div>
+
+    <div class="meta-row">
+      <div class="meta-item">
+        <div class="label">File</div>
+        <div class="value" id="resFileName"></div>
+      </div>
+      <div class="meta-item">
+        <div class="label">Confidence</div>
+        <div class="value" id="resConfidenceText"></div>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" id="resConfidenceBar"></div>
+        </div>
+      </div>
+      <div class="meta-item">
+        <div class="label">Raw Logit</div>
+        <div class="value" id="resLogit" style="font-family:monospace;font-size:0.9rem"></div>
+      </div>
+    </div>
+
+    <div class="vis-section">
+      <h3>Binary Visualization — Nataraj Byteplot</h3>
+      <img id="visImage" src="" alt="Byteplot visualization">
+      <p class="vis-caption">
+        Each pixel represents one raw byte of the executable (0–255).
+        Visual patterns reveal code structure, packed regions, and entropy distribution.
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const fileInput   = document.getElementById('fileInput');
+  const analyzeBtn  = document.getElementById('analyzeBtn');
+  const selectedName = document.getElementById('selectedName');
+  const spinnerWrap = document.getElementById('spinnerWrap');
+  const errorBox    = document.getElementById('errorBox');
+  const resultCard  = document.getElementById('resultCard');
+  const resetBtn    = document.getElementById('resetBtn');
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files.length > 0) {
+      selectedName.textContent = '✔ ' + fileInput.files[0].name;
+      analyzeBtn.disabled = false;
+    }
+  });
+
+  async function runPrediction() {
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    // Reset previous results
+    errorBox.style.display = 'none';
+    resultCard.style.display = 'none';
+    spinnerWrap.style.display = 'block';
+    analyzeBtn.disabled = true;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const resp = await fetch('/predict', { method: 'POST', body: formData });
+      const data = await resp.json();
+
+      spinnerWrap.style.display = 'none';
+
+      if (data.error) {
+        showError(data.error);
+        analyzeBtn.disabled = false;
+        return;
+      }
+
+      renderResult(data);
+    } catch (err) {
+      spinnerWrap.style.display = 'none';
+      showError('Connection error: ' + err.message);
+      analyzeBtn.disabled = false;
+    }
+  }
+
+  function renderResult(data) {
+    const banner = document.getElementById('resultBanner');
+    banner.textContent = data.label === 'malware' ? '🔴 MALWARE DETECTED' : '🟢 BENIGN';
+    banner.className = 'result-banner ' + data.label;
+
+    document.getElementById('resFileName').textContent = data.file_name;
+
+    const pct = (data.confidence * 100).toFixed(1) + '%';
+    document.getElementById('resConfidenceText').textContent = pct;
+
+    const bar = document.getElementById('resConfidenceBar');
+    bar.style.width = pct;
+    bar.className = 'progress-bar-fill ' + data.label;
+
+    document.getElementById('resLogit').textContent = data.logit;
+
+    const img = document.getElementById('visImage');
+    img.src = 'data:image/png;base64,' + data.image_b64;
+
+    resultCard.style.display = 'block';
+    resetBtn.style.display = 'inline-block';
+    analyzeBtn.style.display = 'none';
+  }
+
+  function showError(msg) {
+    errorBox.textContent = '⚠ ' + msg;
+    errorBox.style.display = 'block';
+  }
+
+  function resetForm() {
+    fileInput.value = '';
+    selectedName.textContent = '';
+    analyzeBtn.disabled = true;
+    analyzeBtn.style.display = 'inline-block';
+    resetBtn.style.display = 'none';
+    resultCard.style.display = 'none';
+    errorBox.style.display = 'none';
+  }
+</script>
+</body>
+</html>
