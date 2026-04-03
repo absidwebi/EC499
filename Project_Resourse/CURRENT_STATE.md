@@ -1,7 +1,7 @@
 # CURRENT_STATE.md
 # EC499 - Current Project State
 
-Last updated: 2026-04-02
+Last updated: 2026-04-04
 
 ---
 
@@ -12,15 +12,30 @@ Last updated: 2026-04-02
 | Stage 1 - Dataset Preparation | DONE | MaleX split pipeline is active under archive/malex_dataset |
 | Stage 2 - Base Model Selection | DONE | 3C2D selected from final test-set comparison |
 | Stage 3 Part 1 - Attack Evaluation | DONE | Clean baseline vulnerability confirmed |
-| Stage 3 Part 2 - Adversarial Training | IN PROGRESS (continuation run) | PGD resume run active; best robust val currently > 71% |
+| Stage 3 Part 2 - Adversarial Training | IN PROGRESS (continuation run) | PGD resume run active toward 50 epochs; best robust val currently 74.12% |
 | Stage 3 Part 2b - FGSM Defense Branch | DONE | 20-epoch FGSM run completed with checkpoint + curve |
-| Stage 4 - Inference API + Demo | IN PROGRESS | inference.py, app.py, UI, Dockerfile implemented; Docker runtime test blocked locally |
+| Stage 4 - Inference API + Demo | IMPLEMENTED + VALIDATED (with residual caveat) | inference.py, app.py, UI, Dockerflow verified in session; isolated-network host reachability caveat remains |
 
 ---
 
-## 2. What Changed Since 2026-04-01
+## 2. What Changed Since 2026-04-02
 
-### 2.1 New/updated Python scripts
+### 2.1 Python script changes in this window
+
+1) Updated: Project_Resourse/adversarial_train.py
+- Changed `NUM_EPOCHS` from `20` to `50`.
+- Reason: continue from saved checkpoint instead of truncating at epoch cap 20.
+
+No other tracked `.py` files changed in this update window.
+
+### 2.2 New run outputs and comparison artifacts
+
+- run_logs/evaluate_attacks_3c2d_post35.log
+- run_logs/evaluate_attacks_3c2d_at_post35.log
+- Project_Resourse/logs/attack_evaluation_results_3c2d_at.txt
+- Project_Resourse/logs/attack_comparison_3c2d_clean_vs_at_post35.txt
+
+### 2.3 Existing major scripts/artifacts still in active use (from prior cycle)
 
 1) Updated: Project_Resourse/config.py
 - Added constants for fixed adversarial test set and FGSM-trained model path.
@@ -40,7 +55,7 @@ Last updated: 2026-04-02
 6) New: Project_Resourse/app.py
 - Flask API with /health, /predict, 50MB cap, tempfile handling, JSON error paths.
 
-### 2.2 New major artifacts
+### 2.4 New major artifacts (cumulative)
 
 - Project_Resourse/adversarial_test_set_malex/
 - Project_Resourse/models/3c2d_malex_fgsm_adversarially_trained.pth
@@ -60,14 +75,15 @@ Last updated: 2026-04-02
 ### 3.1 PGD defense continuation (active)
 
 From current full-checkpoint metadata:
-- epoch_zero_based: 14
-- resume_next_epoch_1based: 16
-- best_robust_val_acc: 71.5675%
-- best_epoch: 15
-- epochs_no_improve: 0
+- epoch_zero_based: 35
+- resume_next_epoch_1based: 37
+- best_robust_val_acc: 74.1239%
+- best_epoch: 35
+- epochs_no_improve: 1
 
 Current state summary:
 - PGD continuation run is still active in terminal and writing to canonical run log.
+- Latest completed summary in canonical log: Epoch 36/50 with Val Clean 80.11% and Val Robust 73.97%.
 - Model and full checkpoint are updating under models/.
 
 ### 3.2 FGSM defense branch (complete)
@@ -80,24 +96,20 @@ Final FGSM epoch log snapshot:
 - Val Robust (FGSM): 71.68%
 - Best robust val acc (checkpoint): 72.7306% at epoch 19
 
-### 3.3 Fixed adversarial-set comparison (deterministic)
+### 3.3 Clean vs AT mirrored attack comparison (post-epoch-35 checkpoint)
 
-From run_logs/fixed_adv_eval_all_models_final.log:
+From Project_Resourse/logs/attack_comparison_3c2d_clean_vs_at_post35.txt:
 - Clean model:
   - Clean acc 85.29%
-  - FGSM recall 15.29%
-  - PGD recall 0.53%
-- PGD-defended:
-  - Clean acc 73.07%
-  - FGSM recall 58.56%
-  - PGD recall 58.29%
-- FGSM-defended:
-  - Clean acc 77.33%
-  - FGSM recall 67.97%
-  - PGD recall 67.84%
+  - FGSM e=0.10 acc 3.49%
+  - PGD e=0.05 (40 steps) acc 0.62%
+- AT (PGD) model:
+  - Clean acc 80.03%
+  - FGSM e=0.10 acc 71.39%
+  - PGD e=0.05 (40 steps) acc 74.22%
 
 Interpretation:
-- Both defended models are substantially stronger than clean baseline under fixed adversarial evaluation.
+- AT model delivers major robustness gains under identical attack settings, with expected clean-accuracy tradeoff.
 
 ---
 
@@ -114,15 +126,17 @@ Local endpoint tests passed:
 - POST /predict with valid PE returned label/confidence/logit/image_b64.
 - POST /predict with non-PE returned ValueError-backed JSON error.
 
+Additional note:
+- Docker is available on this host now (`docker --version` reports 28.2.2).
+- Latest Stage 4 verification notes include one residual caveat around host reachability behavior under isolated `--network=none` conditions.
+
 ---
 
 ## 5. Current Problems / Blockers
 
 1) Split-overlap risk remains open (scientific methodology risk).
-2) PGD continuation run is still in progress, so final continuation metrics are not locked yet.
-3) Docker runtime validation is blocked in this environment:
-- docker command missing
-- sudo install path requires interactive password
+2) PGD continuation run is still in progress to epoch 50, so final continuation metrics are not locked yet.
+3) Stage 4 has a residual reproducibility caveat under isolated-network host reachability behavior.
 4) Large unrelated local untracked files remain in workspace and should stay out of scoped commits.
 
 ---
@@ -130,6 +144,6 @@ Local endpoint tests passed:
 ## 6. Immediate Next Actions
 
 1) Let active PGD continuation run finish and record final best robust-val metric.
-2) Re-run fixed-set all-model comparison if PGD continuation improves materially.
+2) Re-run clean-vs-AT mirrored attack comparison on final checkpoint.
 3) Resolve split-overlap issue and rerun overlap integrity diagnostics.
-4) Complete Docker build/run test once docker is available.
+4) Archive final Stage 4 smoke-test evidence with command outputs for thesis appendix traceability.

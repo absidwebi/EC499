@@ -1,8 +1,8 @@
 # EC499 Folder Structure Overview
 
-Last updated: 2026-04-02
+Last updated: 2026-04-04
 
-This file captures the current high-level workspace layout and the key files relevant to active Stage 3 continuation work and Stage 4 malware-inference deployment implementation.
+This file captures the current high-level workspace layout and the key files relevant to active Stage 3 continuation (50-epoch extension) and Stage 4 inference/demo validation.
 
 ---
 
@@ -72,14 +72,16 @@ Additional diagnostics/utility scripts remain in place and are unchanged unless 
 ### 3.1 Primary model outputs and checkpoints
 - `Project_Resourse/models/3c2d_malex_adversarially_trained.pth`
 - `Project_Resourse/models/3c2d_malex_clean_vulnerable.pth`
+- `Project_Resourse/models/3c2d_malex_fgsm_adversarially_trained.pth`
 - `Project_Resourse/models/at_3c2d_full_checkpoint.pth`
-- `Project_Resourse/models/at_3c2d_fgsm.pth`
 - `Project_Resourse/models/at_3c2d_fgsm_full_checkpoint.pth`
 
 ### 3.2 Evaluation outputs
 - `Project_Resourse/base_model_testset_results.json`
 - `Project_Resourse/logs/attack_comparison_3c2d_before_after_stage3.json`
 - `Project_Resourse/logs/attack_evaluation_results_3c2d.txt`
+- `Project_Resourse/logs/attack_evaluation_results_3c2d_at.txt`
+- `Project_Resourse/logs/attack_comparison_3c2d_clean_vs_at_post35.txt`
 
 ### 3.3 Stage 4 deployment assets
 - `Project_Resourse/Dockerfile`
@@ -92,6 +94,8 @@ Additional diagnostics/utility scripts remain in place and are unchanged unless 
 `run_logs/` currently includes:
 - `adversarial_train_ 3C2D_Fixed_malex_stage3.log`
 - `adversarial_train_fgsm_20260401_052733.log`
+- `evaluate_attacks_3c2d_post35.log`
+- `evaluate_attacks_3c2d_at_post35.log`
 - `evaluate_attacks_3c2d_clean_vs_defended_stage3.log`
 - `fixed_adv_eval_all_models_final.log`
 - `fixed_adv_eval_3c2d_clean.log`
@@ -110,21 +114,25 @@ Additional diagnostics/utility scripts remain in place and are unchanged unless 
 
 ## 5. Current Runtime Status
 
-At update time (2026-04-02), both of the following processes are active:
+At update time (2026-04-04), both of the following processes are active:
 - Stage 3 PGD continuation training:
 	- `/home/alucard-00/EC499/venv/bin/python /home/alucard-00/EC499/Project_Resourse/adversarial_train.py`
 - Stage 4 Flask application:
-	- `/home/alucard-00/EC499/Project_Resourse/venv/bin/python app.py`
+	- `python app.py` (running service process)
 
 Checkpoint metadata snapshot at update time:
 - `Project_Resourse/models/at_3c2d_full_checkpoint.pth`:
-	- saved epoch (zero-based): 14
-	- best robust val acc: 71.5675%
-	- best epoch (one-based): 15
+	- saved epoch (zero-based): 35
+	- next resume epoch (one-based): 37
+	- best robust val acc: 74.1239%
+	- best epoch (one-based): 35
+- Latest completed canonical run summary:
+	- `Epoch 36/50 | Train Loss 0.4713 | Train Acc 74.75% | Val Clean 80.11% | Val Robust 73.97%`
 - `Project_Resourse/models/at_3c2d_fgsm_full_checkpoint.pth`:
 	- saved epoch (zero-based): 19
 	- best robust val acc: 72.7306%
 	- best epoch (one-based): 19
 
 Operational note:
-- Local Stage 4 health and predict endpoint tests pass; Docker runtime validation remains pending due host docker availability.
+- Local Stage 4 health and predict endpoint tests pass.
+- Docker is available on host; remaining caveat is isolated-network host reachability behavior for strict reproduction mode.

@@ -36,7 +36,7 @@ from models import MaleX3C2D, get_resnet18_grayscale, get_resnet18_pretrained_gr
 # CONFIGURATION
 # ============================================================
 BATCH_SIZE          = 16
-NUM_EPOCHS          = 20      # Increased from 5 - allows proper convergence
+NUM_EPOCHS          = 50      # Continue from epoch 35 checkpoint to epoch 50
 LEARNING_RATE       = 1e-4
 EARLY_STOP_PATIENCE = 5       # Stop if robust val acc does not improve
 

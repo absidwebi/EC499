@@ -7,7 +7,7 @@ GitHub: https://github.com/absidwebi/EC499
 Primary Machine: Ubuntu, RTX 4060, /home/alucard-00/EC499/
 Python Environment (active and verified): /home/alucard-00/EC499/Project_Resourse/venv/
 
-Last updated: 2026-04-02
+Last updated: 2026-04-04
 
 ---
 
@@ -77,7 +77,7 @@ Artifact:
 
 Clean baseline collapse under stronger attacks remains confirmed.
 
-### 4.2 Stage 3 part 2 (PGD adversarial training): continuation run active
+### 4.2 Stage 3 part 2 (PGD adversarial training): continuation run active toward 50 epochs
 
 Primary run log:
 - run_logs/adversarial_train_ 3C2D_Fixed_malex_stage3.log
@@ -85,10 +85,18 @@ Primary run log:
 Current runtime state (latest check):
 - PGD adversarial training process is active.
 - Saved full-checkpoint state currently shows:
-  - epoch_zero_based: 14
-  - resume_next_epoch_1based: 16
-  - best_robust_val_acc: 71.5675%
-  - best_epoch: 15
+  - epoch_zero_based: 35
+  - resume_next_epoch_1based: 37
+  - best_robust_val_acc: 74.1239%
+  - best_epoch: 35
+  - epochs_no_improve: 1
+
+Latest completed epoch summary in canonical run log:
+- Epoch 36/50
+- Train Loss: 0.4713
+- Train Acc: 74.75%
+- Val Clean: 80.11%
+- Val Robust: 73.97%
 
 Checkpoint and model artifacts:
 - Project_Resourse/models/at_3c2d_full_checkpoint.pth
@@ -97,7 +105,8 @@ Checkpoint and model artifacts:
 - Project_Resourse/logs/adversarial_training_curve_3c2d.png
 
 Interpretation:
-- The resumed PGD run already moved well beyond the earlier 64.91% robust-val baseline and crossed 71% robust validation.
+- The resumed PGD run moved well beyond the earlier 64.91% robust-val baseline and reached 74.12% best robust validation.
+- Epoch 36 did not improve best robust validation, but training is still active and progressing through epoch 37 at update time.
 
 ### 4.3 Fixed adversarial test set + deterministic comparison: complete
 
@@ -147,9 +156,31 @@ Final checkpoint metadata:
 - best_robust_val_acc: 72.7306%
 - best_epoch: 19
 
+### 4.5 Post-epoch-35 clean vs AT attack comparison: complete
+
+Clean-model attack evaluation (no rerun during AT pass):
+- run_logs/evaluate_attacks_3c2d_post35.log
+- Project_Resourse/logs/attack_evaluation_results_3c2d.txt
+
+AT-model mirrored evaluation (same FGSM/PGD settings):
+- run_logs/evaluate_attacks_3c2d_at_post35.log
+- Project_Resourse/logs/attack_evaluation_results_3c2d_at.txt
+
+Side-by-side delta report:
+- Project_Resourse/logs/attack_comparison_3c2d_clean_vs_at_post35.txt
+
+Key outcomes:
+- Clean accuracy: 85.29% (clean model) vs 80.03% (AT model), delta -5.26 pp
+- PGD (e=0.05, steps=40): 0.62% (clean model) vs 74.22% (AT model), delta +73.60 pp
+- FGSM (e=0.10): 3.49% (clean model) vs 71.39% (AT model), delta +67.90 pp
+
+Interpretation:
+- Robustness gains are large and consistent across all attack strengths.
+- Clean-accuracy tradeoff remains present and expected.
+
 ---
 
-## 5. Stage 4 Inference and Deployment (In Progress)
+## 5. Stage 4 Inference and Deployment (Implemented + Verified with Remaining Caveat)
 
 ### 5.1 Implemented files
 
@@ -162,21 +193,19 @@ Final checkpoint metadata:
 - Project_Resourse/Dockerfile
   - Container recipe for CPU inference demo.
 
-### 5.2 Local validation status
+### 5.2 Validation status
 
-Local (non-Docker) checks passed:
+Local API checks passed:
 - /health returned model status json.
 - /predict with valid PE returned benign/malware label, confidence, logit, and non-empty image_b64.
 - /predict with non-PE returned validation-error json (400 path).
 
-### 5.3 Current Stage 4 blocker
+Container-level checks were executed in the latest verification cycle with a single environment caveat:
+- isolated-mode (`--network=none`) host reachability behavior in this setup remains non-standard and should be considered when reproducing the exact demo flow.
 
-Docker build/run testing is currently blocked in this environment:
-- docker command is not installed.
-- sudo install path requires interactive password.
+### 5.3 Current Stage 4 residual requirement
 
-Impact:
-- Docker task file is implemented, but container build/run validation is pending environment-level enablement.
+- Re-run one final Stage 4 end-to-end smoke pass (health + valid PE + invalid PE + UI + dockerized run) after Stage 3 training stabilizes, and record outputs in a dedicated run log artifact for thesis appendix traceability.
 
 ---
 
@@ -226,20 +255,31 @@ Why:
 Why:
 - Stage 4 deploy/demo requirement for committee-facing interaction.
 
+### 6.3 Additional script change after 2026-04-02
+
+7) Project_Resourse/adversarial_train.py
+- Updated `NUM_EPOCHS` from `20` to `50`.
+
+Why:
+- Continue PGD adversarial training from existing checkpoint beyond the previous cap, preserving optimizer/scheduler state and append-only logging.
+
+Note on tracked Python changes in this cycle:
+- No other tracked `.py` files changed after this update window.
+
 ---
 
 ## 7. Known Open Items and Risks
 
 1) MaleX split-overlap methodological risk remains unresolved.
-2) PGD continuation run is still active; final epoch-20 metrics are not yet frozen.
-3) Docker validation blocked by missing docker binary and privileged install requirement.
-4) Workspace contains large unrelated untracked binaries and archives that must stay out of scoped commits.
+2) PGD continuation run to epoch 50 is still active; final continuation metrics are not yet frozen.
+3) Stage 4 has a residual reproducibility caveat around isolated-network host reachability behavior.
+4) Workspace contains large unrelated untracked binaries/archives/generated images that must stay out of scoped commits.
 
 ---
 
 ## 8. Immediate Next Actions
 
-1) Let active PGD continuation run finish and capture final robust-val and best-epoch metrics.
-2) Re-run fixed-set comparison for updated PGD checkpoint if metrics moved materially.
+1) Let active PGD continuation run finish to epoch 50 and capture final robust-val/best-epoch metrics.
+2) Re-run side-by-side clean vs AT attack comparison on the latest final checkpoint.
 3) Resolve split-overlap risk and rerun integrity checks for thesis-grade claims.
-4) Complete Docker build/run verification once docker is available in environment.
+4) Archive Stage 4 final smoke-test evidence in a reproducible run log bundle.

@@ -558,3 +558,134 @@ Impact:
 	- `POST /predict` with non-PE (returns validation error JSON)
 - Docker verification pending host-side docker availability.
 
+---
+
+## 2026-04-03 to 2026-04-04 Delta Update (Post-35 Evaluation + Training Extension)
+
+### D31 - Evaluate Clean 3C2D at Post-35 Milestone Before Further Continuation
+Decision:
+- Run `evaluate_attacks.py` with `MODEL_VARIANT='3c2d'` at the epoch-35 milestone to lock a clean-model reference table before extending training.
+
+Reason:
+- Preserve a stable clean baseline snapshot for later side-by-side comparison with defended checkpoints.
+
+Outcome:
+- Clean vulnerability table persisted to `logs/attack_evaluation_results_3c2d.txt` and `run_logs/evaluate_attacks_3c2d_post35.log`.
+
+### D32 - Mirror the Same Metrics on AT Model Without Re-running Clean Baseline
+Decision:
+- Run a dedicated AT evaluation pass using the exact same FGSM/PGD settings used for clean-model evaluation.
+- Do not re-run clean baseline.
+
+Reason:
+- Ensure direct comparability while avoiding redundant computation and accidental baseline drift.
+
+Outcome:
+- AT table saved to `logs/attack_evaluation_results_3c2d_at.txt`.
+- Side-by-side delta report saved to `logs/attack_comparison_3c2d_clean_vs_at_post35.txt`.
+
+### D33 - Extend PGD Adversarial Training Epoch Budget to 50
+Decision:
+- Modify `adversarial_train.py` from `NUM_EPOCHS = 20` to `NUM_EPOCHS = 50` and continue from full checkpoint.
+
+Reason:
+- Continue robust training trajectory without resetting optimizer/scheduler state.
+
+Outcome:
+- Training resumed and progressed into epoch 37/50.
+- Checkpoint now records best robust validation 74.1239% at epoch 35.
+
+### D34 - Keep Canonical Stage 3 Run Log Append-Only During Resume Cycles
+Decision:
+- Continue using `run_logs/adversarial_train_ 3C2D_Fixed_malex_stage3.log` as the authoritative append-only training trace.
+
+Reason:
+- Single-source traceability for interruption/resume events and thesis reproducibility.
+
+Outcome:
+- Latest completed epoch summary in canonical log: Epoch 36/50, Val Robust 73.97%.
+
+### D35 - Stage 4 Environment State Updated (Docker Available)
+Decision:
+- Mark host-side Docker availability as restored and update context docs accordingly.
+
+Reason:
+- Previous context stated Docker was unavailable; that is no longer accurate (`docker --version` present).
+
+Outcome:
+- Stage 4 status now tracked as implemented/validated with one residual caveat: isolated-network host reachability behavior during strict reproduction mode.
+
+---
+
+## Additional Bug Log Entries (2026-04-03 to 2026-04-04)
+
+### Bug 17 - Module Import Failure When Launching AT Evaluation from Repo Root
+Symptom:
+- `ModuleNotFoundError: No module named 'config'` during AT evaluation attempt.
+
+Cause:
+- Script-local imports expected execution from `Project_Resourse` working directory.
+
+Fix:
+- Re-run from the `Project_Resourse` directory.
+
+Impact:
+- AT evaluation completed successfully with aligned metrics.
+
+### Bug 18 - GPU Resource Contention Risk Between Long Training and Attack Evaluation
+Symptom:
+- Running heavy evaluation while PGD training is active can produce contention and unstable throughput.
+
+Cause:
+- Both tasks are compute-heavy and share the same device resources.
+
+Fix:
+- Pause/stop active training before AT evaluation, run evaluation, then resume training from checkpoint.
+
+Impact:
+- Preserved deterministic evaluation workflow and maintained checkpoint-safe continuation.
+
+### Bug 19 - Context Drift in Stage 4 Docker Availability Statement
+Symptom:
+- Docs reported missing Docker binary while host now has Docker.
+
+Cause:
+- Environment changed after prior context snapshot.
+
+Fix:
+- Re-check environment and update all context files to reflect current availability.
+
+Impact:
+- Planning context no longer carries stale environment assumptions.
+
+---
+
+## 2026-04-04 Execution Snapshot
+
+### Stage 3 continuation state
+- Active process: `/home/alucard-00/EC499/Project_Resourse/venv/bin/python /home/alucard-00/EC499/Project_Resourse/adversarial_train.py`
+- Current checkpoint (`models/at_3c2d_full_checkpoint.pth`):
+	- epoch_zero_based=35
+	- resume_next_epoch_1based=37
+	- best_robust_val_acc=74.1239%
+	- best_epoch=35
+	- epochs_no_improve=1
+
+### Post-35 clean vs AT attack results
+- Clean model (from `attack_evaluation_results_3c2d.txt`):
+	- Clean 85.29%
+	- FGSM e=0.10: 3.49%
+	- PGD e=0.05 (40): 0.62%
+- AT model (from `attack_evaluation_results_3c2d_at.txt`):
+	- Clean 80.03%
+	- FGSM e=0.10: 71.39%
+	- PGD e=0.05 (40): 74.22%
+- Side-by-side delta (AT-clean):
+	- Clean: -5.26 pp
+	- PGD e=0.05 (40): +73.60 pp
+	- FGSM e=0.10: +67.90 pp
+
+### Stage 4 runtime state
+- `app.py` service process is running.
+- Local inference endpoint behavior remains consistent with static PE-validation requirements.
+
