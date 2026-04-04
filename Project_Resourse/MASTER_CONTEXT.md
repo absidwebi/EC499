@@ -689,3 +689,97 @@ Impact:
 - `app.py` service process is running.
 - Local inference endpoint behavior remains consistent with static PE-validation requirements.
 
+---
+
+## 2026-04-04 Final Delta Update (Stage 3 Finalization + Stage 4 Compare Deployment)
+
+### D36 - Lock the best PGD checkpoint at epoch 35 after continuation to 50
+Decision:
+- Continue the PGD run to the 50-epoch cap and rely on early stopping to decide if post-35 continuation provides meaningful gains.
+
+Reason:
+- Prevent premature stopping and confirm whether robustness can exceed the epoch-35 best value.
+
+Outcome:
+- Run completed at epoch 40/50 via early stopping.
+- Best robust validation remained 74.12% at epoch 35.
+- Epoch 35 checkpoint remains the selected defended model for reporting.
+
+### D37 - Add Stage 4 adversarial comparison endpoint and full UI flow
+Decision:
+- Extend inference deployment from single prediction to full clean-vs-adversarial comparison using two models (clean and AT).
+
+Reason:
+- This is the core demonstration requirement for Stage 4 and directly reflects the thesis contribution.
+
+Outcome:
+- `inference.py` now includes `AdversarialComparisonEngine` and PGD comparison logic.
+- `app.py` now exposes `POST /compare`.
+- `templates/index.html` now includes a dedicated adversarial comparison tab and rendering path.
+
+### D38 - Rebuild and replace running Docker container after permissions fix
+Decision:
+- Rebuild `ec499-demo` and recreate `ec499-inference` from current source once docker socket access was restored.
+
+Reason:
+- Previous running container served stale API code and returned 404 on `/compare`.
+
+Outcome:
+- Current container serves updated code.
+- `/compare` now responds as expected in the live container.
+
+---
+
+## Additional Bug Log Entries (2026-04-04)
+
+### Bug 20 - Docker socket ACL command used invalid shell variable syntax
+Symptom:
+- `docker ps` continued to fail with permission denied even after ACL command attempt.
+
+Cause:
+- Command used `"$alucard-00"`, which is not a valid shell variable expansion for the username.
+
+Fix:
+- Use proper user literal for ACL and refresh group context with `newgrp docker`.
+
+Impact:
+- Docker daemon access restored in active shell context.
+
+### Bug 21 - Stale running container missing `/compare` route
+Symptom:
+- `/compare` returned 404 while code in workspace already included endpoint.
+
+Cause:
+- Existing container was running an older image.
+
+Fix:
+- Rebuild image and recreate container.
+
+Impact:
+- `/compare` route now available and validated in deployed container.
+
+---
+
+## 2026-04-04 Final Execution Snapshot
+
+### Stage 3 final training state
+- Canonical log: `run_logs/adversarial_train_ 3C2D_Fixed_malex_stage3.log`
+- Final continuation endpoint:
+	- Epoch 40/50 | Train Loss 0.4675 | Train Acc 75.14% | Val Clean 79.72% | Val Robust 73.87%
+	- Early stop triggered after 5 no-improvement epochs
+- Best robust checkpoint:
+	- Robust val: 74.12% at epoch 35
+	- Weights: `models/3c2d_malex_adversarially_trained.pth`
+
+### Stage 3 clean vs AT post35 comparison (retained reference)
+- Clean (no attack): 85.29% clean model vs 80.03% AT model
+- FGSM e=0.10: 3.49% clean model vs 71.39% AT model
+- PGD e=0.05, steps=40: 0.62% clean model vs 74.22% AT model
+
+### Stage 4 live deployment state
+- Container `ec499-inference` running on port 5000 from rebuilt `ec499-demo` image.
+- `GET /health` returns status JSON.
+- `POST /compare` checks:
+	- invalid non-PE upload -> HTTP 400 with PE validation message
+	- valid PE upload -> HTTP 200 with comparison payload (`byteplot_b64`, `clean_256_b64`, `adv_256_b64`, `clean_model`, `at_model`, `attack_params`)
+

@@ -13,125 +13,95 @@
     --muted: #8b949e;
     --green: #3fb950;
     --red: #f85149;
+    --yellow: #d29922;
     --blue: #58a6ff;
     --accent: #1f6feb;
+    --purple: #a371f7;
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
   body {
-    background: var(--bg);
-    color: var(--text);
+    background: var(--bg); color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", monospace;
-    min-height: 100vh;
-    padding: 2rem 1rem;
+    min-height: 100vh; padding: 2rem 1rem;
   }
-
-  .container { max-width: 900px; margin: 0 auto; }
-
-  header { text-align: center; margin-bottom: 2.5rem; }
+  .container { max-width: 1000px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 2rem; }
   header h1 { font-size: 1.8rem; color: var(--blue); letter-spacing: 0.05em; }
-  header p  { color: var(--muted); margin-top: 0.4rem; font-size: 0.9rem; }
+  header p { color: var(--muted); margin-top: 0.4rem; font-size: 0.9rem; }
   header .badge {
-    display: inline-block; margin-top: 0.8rem;
+    display: inline-block; margin-top: 0.6rem;
     background: var(--surface); border: 1px solid var(--border);
     color: var(--muted); font-size: 0.75rem; padding: 0.2rem 0.7rem;
     border-radius: 99px;
   }
 
+  /* Tab navigation */
+  .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; }
+  .tab-btn {
+    padding: 0.7rem 1.4rem; cursor: pointer; background: none;
+    border: none; border-bottom: 2px solid transparent;
+    color: var(--muted); font-size: 0.95rem; font-weight: 500;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Cards */
   .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 1.8rem;
-    margin-bottom: 1.5rem;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 1.8rem; margin-bottom: 1.5rem;
   }
   .card h2 { font-size: 1rem; color: var(--text); margin-bottom: 1.2rem; }
 
+  /* Upload zone */
   .upload-zone {
-    border: 2px dashed var(--border);
-    border-radius: 6px;
-    padding: 2rem;
-    text-align: center;
+    border: 2px dashed var(--border); border-radius: 6px;
+    padding: 2rem; text-align: center; cursor: pointer;
     transition: border-color 0.2s;
-    cursor: pointer;
   }
   .upload-zone:hover { border-color: var(--accent); }
   .upload-zone input[type=file] { display: none; }
   .upload-zone .icon { font-size: 2.5rem; margin-bottom: 0.6rem; }
   .upload-zone .hint { color: var(--muted); font-size: 0.85rem; }
-  .upload-zone .selected-name {
-    margin-top: 0.8rem;
-    color: var(--blue);
-    font-size: 0.9rem;
-    word-break: break-all;
-  }
+  .upload-zone .selected-name { margin-top: 0.8rem; color: var(--blue); font-size: 0.9rem; word-break: break-all; }
 
+  /* Buttons */
   .btn {
-    display: inline-block;
-    padding: 0.6rem 1.4rem;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
-    font-size: 0.95rem;
-    font-weight: 600;
+    display: inline-block; padding: 0.6rem 1.4rem; border-radius: 6px;
+    border: none; cursor: pointer; font-size: 0.95rem; font-weight: 600;
     transition: opacity 0.15s;
   }
   .btn:hover { opacity: 0.85; }
   .btn:disabled { opacity: 0.4; cursor: not-allowed; }
   .btn-primary { background: var(--accent); color: #fff; }
-  .btn-secondary { background: var(--surface); color: var(--text);
-                   border: 1px solid var(--border); margin-left: 0.8rem; }
-
+  .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); margin-left: 0.8rem; }
+  .btn-purple { background: #2d1f4e; color: var(--purple); border: 1px solid var(--purple); }
   .controls { margin-top: 1.2rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
-
-  .toggle-group { display: flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
-  .toggle-group label {
-    padding: 0.4rem 1rem; cursor: pointer; font-size: 0.85rem; color: var(--muted);
-    transition: background 0.15s, color 0.15s;
-  }
-  .toggle-group input[type=radio] { display: none; }
-  .toggle-group input[type=radio]:checked + label {
-    background: var(--accent); color: #fff;
-  }
 
   /* Result banner */
   .result-banner {
-    border-radius: 6px;
-    padding: 1.2rem 1.5rem;
-    font-size: 1.4rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    margin-bottom: 1.2rem;
-    text-align: center;
+    border-radius: 6px; padding: 1.2rem 1.5rem;
+    font-size: 1.4rem; font-weight: 700; letter-spacing: 0.08em;
+    margin-bottom: 1.2rem; text-align: center;
   }
-  .result-banner.malware { background: rgba(248,81,73,0.15); color: var(--red);
-                           border: 1px solid var(--red); }
-  .result-banner.benign  { background: rgba(63,185,80,0.15); color: var(--green);
-                           border: 1px solid var(--green); }
+  .result-banner.malware { background: rgba(248,81,73,0.15); color: var(--red); border: 1px solid var(--red); }
+  .result-banner.benign  { background: rgba(63,185,80,0.15); color: var(--green); border: 1px solid var(--green); }
 
+  /* Meta row */
   .meta-row { display: flex; gap: 2rem; margin-bottom: 1.2rem; flex-wrap: wrap; }
   .meta-item { flex: 1; min-width: 140px; }
-  .meta-item .label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase;
-                      letter-spacing: 0.06em; margin-bottom: 0.3rem; }
+  .meta-item .label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.3rem; }
   .meta-item .value { font-size: 1rem; color: var(--text); font-weight: 600; }
-
-  .progress-bar-track {
-    background: var(--border); border-radius: 99px; height: 10px;
-    overflow: hidden; margin-top: 0.4rem;
-  }
-  .progress-bar-fill {
-    height: 100%; border-radius: 99px; transition: width 0.5s ease;
-  }
+  .progress-bar-track { background: var(--border); border-radius: 99px; height: 10px; overflow: hidden; margin-top: 0.4rem; }
+  .progress-bar-fill { height: 100%; border-radius: 99px; transition: width 0.5s ease; }
   .progress-bar-fill.malware { background: var(--red); }
   .progress-bar-fill.benign  { background: var(--green); }
 
+  /* Visualization */
   .vis-section { margin-top: 1.2rem; }
   .vis-section h3 { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.6rem; }
-  .vis-section img {
-    max-width: 100%; border: 1px solid var(--border); border-radius: 4px;
-    image-rendering: pixelated;
-  }
+  .vis-section img { max-width: 100%; border: 1px solid var(--border); border-radius: 4px; image-rendering: pixelated; }
   .vis-caption { color: var(--muted); font-size: 0.78rem; margin-top: 0.5rem; }
 
   /* Spinner */
@@ -151,7 +121,48 @@
     display: none; margin-bottom: 1rem;
   }
 
+  /* Comparison grid */
+  .cmp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin-bottom: 1.5rem; }
+  @media (max-width: 600px) { .cmp-grid { grid-template-columns: 1fr; } }
+  .cmp-img-card {
+    background: #0d1117; border: 1px solid var(--border);
+    border-radius: 6px; padding: 1rem; text-align: center;
+  }
+  .cmp-img-card h4 { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.6rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .cmp-img-card img { width: 100%; max-width: 256px; border: 1px solid var(--border); border-radius: 3px; image-rendering: pixelated; }
+
+  .cmp-pred-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+  @media (max-width: 600px) { .cmp-pred-grid { grid-template-columns: 1fr; } }
+  .pred-cell {
+    border: 1px solid var(--border); border-radius: 6px; padding: 1rem;
+  }
+  .pred-cell h4 { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.6rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .pred-label {
+    font-size: 1.1rem; font-weight: 700; letter-spacing: 0.05em;
+    padding: 0.4rem 0.8rem; border-radius: 4px; display: inline-block;
+    margin-bottom: 0.4rem;
+  }
+  .pred-label.malware { background: rgba(248,81,73,0.15); color: var(--red); }
+  .pred-label.benign  { background: rgba(63,185,80,0.15); color: var(--green); }
+  .pred-label.fooled  { background: rgba(210,153,34,0.2); color: var(--yellow); }
+  .pred-conf { font-size: 0.8rem; color: var(--muted); }
+  .pred-logit { font-size: 0.75rem; color: var(--muted); font-family: monospace; }
+
+  .attack-info {
+    background: rgba(163,113,247,0.08); border: 1px solid rgba(163,113,247,0.3);
+    border-radius: 6px; padding: 0.8rem 1rem; margin-bottom: 1.2rem;
+    font-size: 0.82rem; color: var(--purple);
+  }
+  .section-label {
+    font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; padding: 0.2rem 0.6rem; border-radius: 3px;
+    margin-bottom: 0.5rem; display: inline-block;
+  }
+  .section-label.clean-model { background: rgba(88,166,255,0.15); color: var(--blue); }
+  .section-label.at-model { background: rgba(63,185,80,0.15); color: var(--green); }
+
   #resultCard { display: none; }
+  #cmpResultCard { display: none; }
 </style>
 </head>
 <body>
@@ -163,158 +174,366 @@
     <span class="badge" id="modelBadge">Model: {{ model_type }}</span>
   </header>
 
-  <!-- Upload Card -->
-  <div class="card">
-    <h2>Analyze a PE File</h2>
-
-    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
-      <div class="icon">📂</div>
-      <p>Click to select a PE file (.exe, .dll, .sys, .ocx)</p>
-      <p class="hint">Maximum 50 MB · Static analysis only · No execution</p>
-      <p class="selected-name" id="selectedName"></p>
-    </div>
-    <input type="file" id="fileInput" accept=".exe,.dll,.sys,.ocx,.bin">
-
-    <div class="controls">
-      <button class="btn btn-primary" id="analyzeBtn" disabled onclick="runPrediction()">
-        🔍 Analyze File
-      </button>
-      <button class="btn btn-secondary" id="resetBtn" onclick="resetForm()" style="display:none">
-        ↺ Analyze Another File
-      </button>
-    </div>
+  <!-- Tab navigation -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('predict')">🔍 PE Analysis</button>
+    <button class="tab-btn" onclick="switchTab('compare')">⚔️ Adversarial Robustness Demo</button>
   </div>
 
-  <!-- Spinner -->
-  <div class="spinner-wrap" id="spinnerWrap">
-    <div class="spinner"></div>
-    <p>Analyzing binary structure…</p>
-  </div>
+  <!-- ===== TAB 1: Regular Prediction ===== -->
+  <div id="tab-predict" class="tab-panel active">
 
-  <!-- Error -->
-  <div class="error-box" id="errorBox"></div>
-
-  <!-- Result Card -->
-  <div class="card" id="resultCard">
-    <div class="result-banner" id="resultBanner"></div>
-
-    <div class="meta-row">
-      <div class="meta-item">
-        <div class="label">File</div>
-        <div class="value" id="resFileName"></div>
+    <div class="card">
+      <h2>Analyze a PE File</h2>
+      <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+        <div class="icon">📂</div>
+        <p>Click to select a PE file (.exe, .dll, .sys, .ocx)</p>
+        <p class="hint">Maximum 50 MB · Static analysis only · No execution</p>
+        <p class="selected-name" id="selectedName"></p>
       </div>
-      <div class="meta-item">
-        <div class="label">Confidence</div>
-        <div class="value" id="resConfidenceText"></div>
-        <div class="progress-bar-track">
-          <div class="progress-bar-fill" id="resConfidenceBar"></div>
+      <input type="file" id="fileInput" accept=".exe,.dll,.sys,.ocx,.bin">
+      <div class="controls">
+        <button class="btn btn-primary" id="analyzeBtn" disabled onclick="runPrediction()">🔍 Analyze File</button>
+        <button class="btn btn-secondary" id="resetBtn" onclick="resetPredict()" style="display:none">↺ Analyze Another</button>
+      </div>
+    </div>
+
+    <div class="spinner-wrap" id="spinnerWrap"><div class="spinner"></div><p>Analyzing binary structure…</p></div>
+    <div class="error-box" id="errorBox"></div>
+
+    <div class="card" id="resultCard">
+      <div class="result-banner" id="resultBanner"></div>
+      <div class="meta-row">
+        <div class="meta-item">
+          <div class="label">File</div><div class="value" id="resFileName"></div>
+        </div>
+        <div class="meta-item">
+          <div class="label">Confidence</div>
+          <div class="value" id="resConfidenceText"></div>
+          <div class="progress-bar-track"><div class="progress-bar-fill" id="resConfidenceBar"></div></div>
+        </div>
+        <div class="meta-item">
+          <div class="label">Raw Logit</div>
+          <div class="value" id="resLogit" style="font-family:monospace;font-size:0.9rem"></div>
         </div>
       </div>
-      <div class="meta-item">
-        <div class="label">Raw Logit</div>
-        <div class="value" id="resLogit" style="font-family:monospace;font-size:0.9rem"></div>
+      <div class="vis-section">
+        <h3>Binary Visualization — Nataraj Byteplot</h3>
+        <img id="visImage" src="" alt="Byteplot visualization">
+        <p class="vis-caption">Each pixel represents one raw byte of the executable (0–255). Visual patterns reveal code structure, packed regions, and entropy distribution.</p>
       </div>
     </div>
 
-    <div class="vis-section">
-      <h3>Binary Visualization — Nataraj Byteplot</h3>
-      <img id="visImage" src="" alt="Byteplot visualization">
-      <p class="vis-caption">
-        Each pixel represents one raw byte of the executable (0–255).
-        Visual patterns reveal code structure, packed regions, and entropy distribution.
+  </div><!-- end tab-predict -->
+
+  <!-- ===== TAB 2: Adversarial Comparison ===== -->
+  <div id="tab-compare" class="tab-panel">
+
+    <div class="card">
+      <h2>⚔️ Adversarial Robustness Comparison</h2>
+      <p style="color:var(--muted);font-size:0.88rem;margin-bottom:1.2rem;line-height:1.6">
+        Upload a PE file (ideally a known malware sample) to demonstrate the project's core research contribution.
+        A PGD adversarial attack is applied to the input. The <strong style="color:var(--red)">clean model</strong>
+        is fooled by the attack. The <strong style="color:var(--green)">adversarially trained model</strong>
+        correctly classifies both inputs.
+      </p>
+
+      <div class="upload-zone" onclick="document.getElementById('cmpFileInput').click()">
+        <div class="icon">🧪</div>
+        <p>Click to select a PE file for adversarial analysis</p>
+        <p class="hint">Best results with malware samples · Maximum 50 MB · PGD attack runs on CPU (~10–20 seconds)</p>
+        <p class="selected-name" id="cmpSelectedName"></p>
+      </div>
+      <input type="file" id="cmpFileInput" accept=".exe,.dll,.sys,.ocx,.bin">
+
+      <div class="controls">
+        <button class="btn btn-purple" id="cmpAnalyzeBtn" disabled onclick="runComparison()">⚔️ Run Adversarial Test</button>
+        <button class="btn btn-secondary" id="cmpResetBtn" onclick="resetCompare()" style="display:none">↺ Test Another File</button>
+      </div>
+    </div>
+
+    <div class="spinner-wrap" id="cmpSpinnerWrap">
+      <div class="spinner" style="border-top-color:var(--purple)"></div>
+      <p>Generating PGD adversarial example and running both models…<br>
+         <span style="font-size:0.8rem;color:var(--muted)">(This may take 10–20 seconds on CPU)</span>
       </p>
     </div>
-  </div>
+    <div class="error-box" id="cmpErrorBox"></div>
 
-</div>
+    <div id="cmpResultCard">
+
+      <!-- Attack info banner -->
+      <div class="attack-info" id="cmpAttackInfo"></div>
+
+      <!-- Images: original byteplot + clean 256 + adversarial 256 -->
+      <div class="card">
+        <h2>Input Visualizations</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem">
+          <div class="cmp-img-card">
+            <h4>Original Byteplot<br><span style="font-size:0.7rem">(Variable-size Nataraj)</span></h4>
+            <img id="cmpBytePlot" src="" alt="Byteplot">
+          </div>
+          <div class="cmp-img-card">
+            <h4>Clean Input<br><span style="font-size:0.7rem">(256×256, as seen by model)</span></h4>
+            <img id="cmpClean256" src="" alt="Clean 256x256">
+          </div>
+          <div class="cmp-img-card" style="border-color:rgba(248,81,73,0.4)">
+            <h4 style="color:var(--red)">Adversarial Input<br><span style="font-size:0.7rem">(After PGD attack)</span></h4>
+            <img id="cmpAdv256" src="" alt="Adversarial 256x256">
+            <p style="font-size:0.72rem;color:var(--red);margin-top:0.4rem">
+              Visually similar to human eye; model sees it differently
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Prediction grid: 2 models × 2 inputs = 4 cells -->
+      <div class="card">
+        <h2>Model Predictions</h2>
+
+        <!-- Column headers -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:0.8rem;text-align:center">
+          <div></div>
+          <div style="font-size:0.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em">Clean Input</div>
+          <div style="font-size:0.78rem;color:var(--red);text-transform:uppercase;letter-spacing:0.06em">Adversarial Input (PGD)</div>
+        </div>
+
+        <!-- Clean model row -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem;align-items:start">
+          <div>
+            <span class="section-label clean-model">🔓 Clean Model</span>
+            <div style="font-size:0.78rem;color:var(--muted);margin-top:0.3rem">Vulnerable baseline<br>(not adversarially trained)</div>
+          </div>
+          <div class="pred-cell" id="cmCleanCell"></div>
+          <div class="pred-cell" id="cmAdvCell" style="border-color:rgba(248,81,73,0.4)"></div>
+        </div>
+
+        <!-- AT model row -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;align-items:start">
+          <div>
+            <span class="section-label at-model">🛡 AT Model</span>
+            <div style="font-size:0.78rem;color:var(--muted);margin-top:0.3rem">Adversarially trained<br>(PGD-hardened defense)</div>
+          </div>
+          <div class="pred-cell" id="atCleanCell"></div>
+          <div class="pred-cell" id="atAdvCell" style="border-color:rgba(63,185,80,0.4)"></div>
+        </div>
+
+        <!-- Summary verdict -->
+        <div id="cmpVerdict" style="margin-top:1.5rem;padding:1rem;border-radius:6px;text-align:center;display:none">
+        </div>
+      </div>
+
+    </div><!-- end cmpResultCard -->
+
+  </div><!-- end tab-compare -->
+
+</div><!-- end container -->
 
 <script>
-  const fileInput   = document.getElementById('fileInput');
-  const analyzeBtn  = document.getElementById('analyzeBtn');
-  const selectedName = document.getElementById('selectedName');
-  const spinnerWrap = document.getElementById('spinnerWrap');
-  const errorBox    = document.getElementById('errorBox');
-  const resultCard  = document.getElementById('resultCard');
-  const resetBtn    = document.getElementById('resetBtn');
-
-  fileInput.addEventListener('change', () => {
-    if (fileInput.files.length > 0) {
-      selectedName.textContent = '✔ ' + fileInput.files[0].name;
-      analyzeBtn.disabled = false;
-    }
+// ============================================================
+// Tab switching
+// ============================================================
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => {
+    b.classList.toggle('active', b.textContent.includes(name === 'predict' ? 'PE Analysis' : 'Adversarial'));
   });
+  document.getElementById('tab-predict').classList.toggle('active', name === 'predict');
+  document.getElementById('tab-compare').classList.toggle('active', name === 'compare');
+}
 
-  async function runPrediction() {
-    const file = fileInput.files[0];
-    if (!file) return;
+// ============================================================
+// Tab 1: Regular Prediction
+// ============================================================
+const fileInput    = document.getElementById('fileInput');
+const analyzeBtn   = document.getElementById('analyzeBtn');
+const selectedName = document.getElementById('selectedName');
 
-    // Reset previous results
-    errorBox.style.display = 'none';
-    resultCard.style.display = 'none';
-    spinnerWrap.style.display = 'block';
-    analyzeBtn.disabled = true;
+fileInput.addEventListener('change', () => {
+  if (fileInput.files.length > 0) {
+    selectedName.textContent = '✔ ' + fileInput.files[0].name;
+    analyzeBtn.disabled = false;
+  }
+});
 
-    const formData = new FormData();
-    formData.append('file', file);
+async function runPrediction() {
+  const file = fileInput.files[0];
+  if (!file) return;
+  document.getElementById('errorBox').style.display = 'none';
+  document.getElementById('resultCard').style.display = 'none';
+  document.getElementById('spinnerWrap').style.display = 'block';
+  analyzeBtn.disabled = true;
 
-    try {
-      const resp = await fetch('/predict', { method: 'POST', body: formData });
-      const data = await resp.json();
+  const fd = new FormData();
+  fd.append('file', file);
 
-      spinnerWrap.style.display = 'none';
+  try {
+    const resp = await fetch('/predict', { method: 'POST', body: fd });
+    const data = await resp.json();
+    document.getElementById('spinnerWrap').style.display = 'none';
+    if (data.error) { showError('errorBox', data.error); analyzeBtn.disabled = false; return; }
+    renderPredict(data);
+  } catch (err) {
+    document.getElementById('spinnerWrap').style.display = 'none';
+    showError('errorBox', 'Connection error: ' + err.message);
+    analyzeBtn.disabled = false;
+  }
+}
 
-      if (data.error) {
-        showError(data.error);
-        analyzeBtn.disabled = false;
-        return;
-      }
+function renderPredict(d) {
+  const banner = document.getElementById('resultBanner');
+  banner.textContent = d.label === 'malware' ? '🔴 MALWARE DETECTED' : '🟢 BENIGN';
+  banner.className = 'result-banner ' + d.label;
+  document.getElementById('resFileName').textContent = d.file_name;
+  const pct = (d.confidence * 100).toFixed(1) + '%';
+  document.getElementById('resConfidenceText').textContent = pct;
+  const bar = document.getElementById('resConfidenceBar');
+  bar.style.width = pct; bar.className = 'progress-bar-fill ' + d.label;
+  document.getElementById('resLogit').textContent = d.logit;
+  document.getElementById('visImage').src = 'data:image/png;base64,' + d.image_b64;
+  document.getElementById('resultCard').style.display = 'block';
+  document.getElementById('resetBtn').style.display = 'inline-block';
+  document.getElementById('analyzeBtn').style.display = 'none';
+}
 
-      renderResult(data);
-    } catch (err) {
-      spinnerWrap.style.display = 'none';
-      showError('Connection error: ' + err.message);
-      analyzeBtn.disabled = false;
-    }
+function resetPredict() {
+  fileInput.value = ''; selectedName.textContent = '';
+  analyzeBtn.disabled = true; analyzeBtn.style.display = 'inline-block';
+  document.getElementById('resetBtn').style.display = 'none';
+  document.getElementById('resultCard').style.display = 'none';
+  document.getElementById('errorBox').style.display = 'none';
+}
+
+// ============================================================
+// Tab 2: Adversarial Comparison
+// ============================================================
+const cmpFileInput   = document.getElementById('cmpFileInput');
+const cmpAnalyzeBtn  = document.getElementById('cmpAnalyzeBtn');
+const cmpSelectedName = document.getElementById('cmpSelectedName');
+
+cmpFileInput.addEventListener('change', () => {
+  if (cmpFileInput.files.length > 0) {
+    cmpSelectedName.textContent = '✔ ' + cmpFileInput.files[0].name;
+    cmpAnalyzeBtn.disabled = false;
+  }
+});
+
+async function runComparison() {
+  const file = cmpFileInput.files[0];
+  if (!file) return;
+  document.getElementById('cmpErrorBox').style.display = 'none';
+  document.getElementById('cmpResultCard').style.display = 'none';
+  document.getElementById('cmpSpinnerWrap').style.display = 'block';
+  cmpAnalyzeBtn.disabled = true;
+
+  const fd = new FormData();
+  fd.append('file', file);
+
+  try {
+    const resp = await fetch('/compare', { method: 'POST', body: fd });
+    const data = await resp.json();
+    document.getElementById('cmpSpinnerWrap').style.display = 'none';
+    if (data.error) { showError('cmpErrorBox', data.error); cmpAnalyzeBtn.disabled = false; return; }
+    renderComparison(data);
+  } catch (err) {
+    document.getElementById('cmpSpinnerWrap').style.display = 'none';
+    showError('cmpErrorBox', 'Connection error: ' + err.message);
+    cmpAnalyzeBtn.disabled = false;
+  }
+}
+
+function predCellHTML(pred, isAdversarial, isCleanModel) {
+  // Determine if this is the "interesting" adversarial case for color coding
+  const isFooled = isAdversarial && isCleanModel && pred.label === 'benign';
+  const isDefended = isAdversarial && !isCleanModel && pred.label === 'malware';
+
+  let cls = pred.label;
+  let icon = pred.label === 'malware' ? '🔴' : '🟢';
+  let note = '';
+
+  if (isFooled) {
+    cls = 'fooled';
+    icon = '⚠️';
+    note = '<div style="font-size:0.72rem;color:var(--yellow);margin-top:0.3rem">Attack succeeded — model fooled</div>';
+  } else if (isDefended) {
+    note = '<div style="font-size:0.72rem;color:var(--green);margin-top:0.3rem">Defense held — correct prediction</div>';
   }
 
-  function renderResult(data) {
-    const banner = document.getElementById('resultBanner');
-    banner.textContent = data.label === 'malware' ? '🔴 MALWARE DETECTED' : '🟢 BENIGN';
-    banner.className = 'result-banner ' + data.label;
+  const pct = (pred.confidence * 100).toFixed(1) + '%';
+  return `
+    <span class="pred-label ${cls}">${icon} ${pred.label.toUpperCase()}</span>
+    ${note}
+    <div class="pred-conf">Confidence: <strong>${pct}</strong></div>
+    <div class="pred-logit">Logit: ${pred.logit}</div>
+  `;
+}
 
-    document.getElementById('resFileName').textContent = data.file_name;
+function renderComparison(d) {
+  const ap = d.attack_params;
+  document.getElementById('cmpAttackInfo').innerHTML =
+    `⚔️ <strong>PGD Attack Parameters:</strong> ε=${ap.eps} · α=${ap.alpha} · ${ap.steps} steps · Clamp range [-1, 1]
+     <span style="margin-left:1rem;opacity:0.7">· White-box attack on clean model · Threat model: malware evasion</span>`;
 
-    const pct = (data.confidence * 100).toFixed(1) + '%';
-    document.getElementById('resConfidenceText').textContent = pct;
+  document.getElementById('cmpBytePlot').src = 'data:image/png;base64,' + d.byteplot_b64;
+  document.getElementById('cmpClean256').src = 'data:image/png;base64,' + d.clean_256_b64;
+  document.getElementById('cmpAdv256').src   = 'data:image/png;base64,' + d.adv_256_b64;
 
-    const bar = document.getElementById('resConfidenceBar');
-    bar.style.width = pct;
-    bar.className = 'progress-bar-fill ' + data.label;
+  document.getElementById('cmCleanCell').innerHTML  = predCellHTML(d.clean_model.clean_input, false, true);
+  document.getElementById('cmAdvCell').innerHTML    = predCellHTML(d.clean_model.adv_input,   true,  true);
+  document.getElementById('atCleanCell').innerHTML  = predCellHTML(d.at_model.clean_input,    false, false);
+  document.getElementById('atAdvCell').innerHTML    = predCellHTML(d.at_model.adv_input,      true,  false);
 
-    document.getElementById('resLogit').textContent = data.logit;
+  // Summary verdict
+  const cmFooled  = d.clean_model.adv_input.label === 'benign';
+  const atDefended = d.at_model.adv_input.label !== 'benign';
+  const verdict = document.getElementById('cmpVerdict');
+  verdict.style.display = 'block';
 
-    const img = document.getElementById('visImage');
-    img.src = 'data:image/png;base64,' + data.image_b64;
-
-    resultCard.style.display = 'block';
-    resetBtn.style.display = 'inline-block';
-    analyzeBtn.style.display = 'none';
+  if (cmFooled && atDefended) {
+    verdict.style.background = 'rgba(63,185,80,0.1)';
+    verdict.style.border = '1px solid var(--green)';
+    verdict.innerHTML = `<strong style="color:var(--green);font-size:1.1rem">
+      ✅ Defense Successful</strong><br>
+      <span style="color:var(--muted);font-size:0.9rem">
+      The clean model was fooled by the PGD attack (predicted benign on adversarial input).<br>
+      The adversarially trained model correctly identified malware on both inputs.
+      </span>`;
+  } else if (!cmFooled) {
+    verdict.style.background = 'rgba(88,166,255,0.08)';
+    verdict.style.border = '1px solid var(--blue)';
+    verdict.innerHTML = `<strong style="color:var(--blue);font-size:1.1rem">
+      ℹ️ Attack did not fool the clean model on this input</strong><br>
+      <span style="color:var(--muted);font-size:0.9rem">
+      This is most compelling with malware samples. Try uploading a malware PE binary for the full demonstration.
+      </span>`;
+  } else {
+    verdict.style.background = 'rgba(210,153,34,0.08)';
+    verdict.style.border = '1px solid var(--yellow)';
+    verdict.innerHTML = `<strong style="color:var(--yellow);font-size:1.1rem">
+      ⚠️ Partial result</strong><br>
+      <span style="color:var(--muted);font-size:0.9rem">See predictions above for details.</span>`;
   }
 
-  function showError(msg) {
-    errorBox.textContent = '⚠ ' + msg;
-    errorBox.style.display = 'block';
-  }
+  document.getElementById('cmpResultCard').style.display = 'block';
+  document.getElementById('cmpResetBtn').style.display = 'inline-block';
+  cmpAnalyzeBtn.style.display = 'none';
+}
 
-  function resetForm() {
-    fileInput.value = '';
-    selectedName.textContent = '';
-    analyzeBtn.disabled = true;
-    analyzeBtn.style.display = 'inline-block';
-    resetBtn.style.display = 'none';
-    resultCard.style.display = 'none';
-    errorBox.style.display = 'none';
-  }
+function resetCompare() {
+  cmpFileInput.value = ''; cmpSelectedName.textContent = '';
+  cmpAnalyzeBtn.disabled = true; cmpAnalyzeBtn.style.display = 'inline-block';
+  document.getElementById('cmpResetBtn').style.display = 'none';
+  document.getElementById('cmpResultCard').style.display = 'none';
+  document.getElementById('cmpErrorBox').style.display = 'none';
+}
+
+// ============================================================
+// Shared utilities
+// ============================================================
+function showError(boxId, msg) {
+  const box = document.getElementById(boxId);
+  box.textContent = '⚠ ' + msg;
+  box.style.display = 'block';
+}
 </script>
 </body>
 </html>
