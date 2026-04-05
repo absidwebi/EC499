@@ -1,0 +1,53 @@
+# ============================================================
+# EC499 — Adversarial Robustness in Deep Learning-Based
+#         Malware Detection
+# ============================================================
+# Validated for:
+#   OS      : Ubuntu 22.04.4 LTS (Jammy Jellyfish)
+#   Python  : 3.11.x
+#   GPU     : NVIDIA RTX 4060 (CUDA 12.1)
+# ============================================================
+#
+# INSTALLATION ORDER — READ BEFORE RUNNING:
+#
+#   Step 1: Install PyTorch FIRST using the command below.
+#           Do NOT pip install torch from this file directly.
+#
+#   pip install torch==2.2.2 torchvision==0.17.2 torchaudio==2.2.2 \
+#       --index-url https://download.pytorch.org/whl/cu121
+#
+#   Step 2: Then install everything else from this file:
+#           pip install -r requirements.txt
+#
+# ============================================================
+
+# --- Stage 1: Dataset Preparation ---
+pefile==2023.2.7
+numpy==1.26.4
+pillow==10.3.0
+
+# --- Stage 2: Model Development ---
+# torch, torchvision, torchaudio installed separately (see above)
+tqdm==4.66.4
+matplotlib==3.8.4
+
+# --- Stage 3: Adversarial Attacks ---
+# NOTE: torchattacks is kept for reference only.
+# All FGSM/PGD attacks in this project are manually implemented
+# using BCEWithLogitsLoss for binary classification compatibility.
+torchattacks==3.5.1
+
+# --- Stage 4-6: Evaluation, Metrics, Visualization ---
+scikit-learn==1.4.2
+scipy==1.13.0
+seaborn==0.13.2
+pandas==2.2.2
+
+# --- Interpretability: Saliency Maps and GradCAM ---
+# Used for thesis figures showing which image regions
+# the model focuses on during classification.
+captum==0.7.0
+
+# --- Stage 4: Inference and Deployment ---
+flask>=2.0
+opencv-python-headless>=4.5

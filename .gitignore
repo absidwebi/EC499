@@ -70,3 +70,6 @@ Project_Resourse/*.png
 Project_Resourse/*.resolved
 Project_Resourse/*.resolved.pdf
 archive.zip
+mal_byteplot_imgs_zipped/
+adversarial_test_set_malex/
+run_logs/
