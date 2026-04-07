@@ -16,6 +16,8 @@ Output:
 
 import os
 import time
+import json
+from datetime import datetime, timezone
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -105,6 +107,38 @@ def load_full_checkpoint(path, model, optimizer, device):
         'epochs_no_improve': ckpt['epochs_no_improve'],
         'log_lines': ckpt['log_lines'],
     }
+
+
+def write_best_weights_metadata(path, model_variant, model_name, weights_path,
+                                clean_model_path, best_epoch,
+                                best_robust_val_acc, saved_at_epoch):
+    """Write sidecar JSON metadata for the saved best weights."""
+    payload = {
+        "updated_utc": datetime.now(timezone.utc).isoformat(),
+        "model_variant": model_variant,
+        "model_name": model_name,
+        "weights_path": weights_path,
+        "source_clean_model_path": clean_model_path,
+        "best_epoch": int(best_epoch),
+        "best_robust_val_acc": float(best_robust_val_acc),
+        "saved_at_epoch": int(saved_at_epoch),
+        "attack_train_config": {
+            "eps": float(ADV_TRAIN_EPS),
+            "alpha": float(ADV_TRAIN_ALPHA),
+            "steps": int(ADV_TRAIN_STEPS),
+        },
+        "run_config": {
+            "num_epochs": int(NUM_EPOCHS),
+            "batch_size": int(BATCH_SIZE),
+            "learning_rate": float(LEARNING_RATE),
+            "early_stop_patience": int(EARLY_STOP_PATIENCE),
+            "seed": 42,
+        },
+    }
+    temp_path = f"{path}.tmp"
+    with open(temp_path, "w") as f:
+        json.dump(payload, f, indent=2)
+    os.replace(temp_path, path)
 
 
 def plot_training_curves(robust_accs, clean_accs, save_path, start_epoch=0):
@@ -238,6 +272,7 @@ def main():
     checkpoint_dir = os.path.dirname(robust_model_save_path)
     full_checkpoint_path = os.path.join(checkpoint_dir,
                                         f"at_{model_tag}_full_checkpoint.pth")
+    best_weights_metadata_path = f"{robust_model_save_path}.metadata.json"
     log_path = LOGS_DIR / f"adversarial_training_log_{model_tag}.txt"
     curve_path = str(LOGS_DIR / f"adversarial_training_curve_{model_tag}.png")
 
@@ -258,6 +293,21 @@ def main():
         epochs_no_improve = state['epochs_no_improve']
         log_lines = state['log_lines']
         print(f"[*] Resuming from epoch {start_epoch + 1}")
+
+        # Backfill sidecar metadata when resuming from older runs.
+        if (best_robust_val_acc > 0 and os.path.exists(robust_model_save_path)
+                and not os.path.exists(best_weights_metadata_path)):
+            write_best_weights_metadata(
+                best_weights_metadata_path,
+                MODEL_VARIANT,
+                model_name,
+                robust_model_save_path,
+                clean_model_path,
+                best_epoch,
+                best_robust_val_acc,
+                best_epoch,
+            )
+            print(f"[*] Backfilled best-weights metadata: {best_weights_metadata_path}")
     else:
         print("[*] Starting fresh adversarial training run.")
     print("-" * 60)
@@ -334,6 +384,17 @@ def main():
             best_robust_val_acc = robust_val_acc
             best_epoch = epoch + 1
             epochs_no_improve = 0
+            write_best_weights_metadata(
+                best_weights_metadata_path,
+                MODEL_VARIANT,
+                model_name,
+                robust_model_save_path,
+                clean_model_path,
+                best_epoch,
+                best_robust_val_acc,
+                epoch + 1,
+            )
+            print(f"  Best-weights metadata saved: {best_weights_metadata_path}")
         else:
             epochs_no_improve += 1
             print(f"  No improvement for {epochs_no_improve}/{EARLY_STOP_PATIENCE} epochs "
@@ -368,6 +429,7 @@ def main():
     print(f"\nAdversarial Training complete in {total_time/60:.2f} minutes")
     print(f"   Best robust val acc : {best_robust_val_acc:.2f}% (epoch {best_epoch})")
     print(f"   Best weights saved  : {robust_model_save_path}")
+    print(f"   Sidecar metadata    : {best_weights_metadata_path}")
     print(f"   Full checkpoint     : {full_checkpoint_path}")
     print(f"   Training curve      : {curve_path}")
     print(f"   Log file            : {log_path}")

@@ -783,3 +783,133 @@ Impact:
 	- invalid non-PE upload -> HTTP 400 with PE validation message
 	- valid PE upload -> HTTP 200 with comparison payload (`byteplot_b64`, `clean_256_b64`, `adv_256_b64`, `clean_model`, `at_model`, `attack_params`)
 
+
+---
+
+## 2026-04-07 Delta Update (Metrics Harmonization + Provenance Upgrade + Doc Sync)
+
+### D39 - Harmonize Stage 2/3 evaluators to full confusion-style metrics
+Decision:
+- Upgrade key evaluation scripts from accuracy-centric output to a richer metric bundle.
+
+Scripts impacted:
+- evaluate_base_models_testset.py
+- evaluate_attacks.py
+- evaluate_attacks_fixed.py
+
+Reason:
+- Thesis reporting and cross-stage comparison require class-level and threshold-aware metrics, not only top-line accuracy.
+
+Outcome:
+- Added confusion counts (TN/FP/FN/TP), precision/recall per class, specificity, FPR/FNR, balanced accuracy, MCC, AUC handling, and TPR@FPR thresholds.
+
+### D40 - Keep deterministic fixed-set logic while expanding clean baseline context
+Decision:
+- Preserve malware-only deterministic fixed-set attack comparison protocol in evaluate_attacks_fixed.py while adding full clean-test metric reporting.
+
+Reason:
+- Deterministic adversarial comparison is still core methodology, but it must be interpreted alongside complete clean-set quality.
+
+Outcome:
+- Fixed-set recall/evasion workflow retained.
+- Clean evaluation output now includes full metric suite for each compared model.
+
+### D41 - Add checkpoint-sidecar provenance in adversarial_train.py
+Decision:
+- Introduce sidecar metadata JSON writer for best defended weights and add resume backfill behavior.
+
+Reason:
+- Improve reproducibility traceability by persisting run config, attack config, and best-checkpoint identity next to saved best weights.
+
+Outcome:
+- Metadata writer integrated in best-checkpoint save path and resume flow.
+- Historical best artifact currently has no sidecar yet (feature added after that artifact was created).
+
+### D42 - Clarify Docker networking claim using direct runtime validation
+Decision:
+- Update project context to explicitly state observed networking behavior: --network=none with -p was not browser-reachable in this environment.
+
+Reason:
+- Prevent reporting an unverified networking assumption and keep Stage 4 deployment claims evidence-based.
+
+Outcome:
+- Context now distinguishes two truths:
+  - Bridge + -p is needed for local demo reachability here.
+  - Current Docker package is reproducible for Stage 4 inference demo, not full training pipeline reproduction.
+
+---
+
+## Additional Bug Log Entries (2026-04-07)
+
+### Bug 22 - Stage docs drifted behind upgraded evaluator outputs
+Symptom:
+- Context documents still described older accuracy-focused evaluator behavior.
+
+Cause:
+- Python script upgrades landed before synchronized markdown refresh.
+
+Fix:
+- Rewrite PROJECT_CONTEXT.md, CURRENT_STATE.md, and EC499_Folder_Structure.md with verified latest script and artifact state.
+
+Impact:
+- Documentation now matches current code behavior and checked artifact counts.
+
+### Bug 23 - Sidecar metadata availability assumed before artifact generation
+Symptom:
+- Workflow narrative implied best-weights sidecar metadata already existed for current defended model.
+
+Cause:
+- Metadata writer was added after historical best checkpoint was already produced.
+
+Fix:
+- Context now states clearly: capability exists in code, but current historical artifact has no sidecar file yet.
+
+Impact:
+- Avoids provenance overclaim and preserves audit accuracy.
+
+### Bug 24 - Ambiguity between fixed-set directories
+Symptom:
+- Two fixed adversarial directories coexisted without clear primary designation.
+
+Cause:
+- Legacy smaller set and MaleX-scale set both remained in repository.
+
+Fix:
+- Documentation now labels adversarial_test_set_malex as primary and adversarial_test_set as legacy/smaller.
+
+Impact:
+- Reduces interpretation mistakes during evaluation and thesis writing.
+
+---
+
+## 2026-04-07 Execution Snapshot
+
+### Repository and branch state
+- Active branch: stage4-demo
+- Modified tracked code files in scope:
+  - Project_Resourse/evaluate_base_models_testset.py
+  - Project_Resourse/evaluate_attacks.py
+  - Project_Resourse/evaluate_attacks_fixed.py
+  - Project_Resourse/adversarial_train.py
+- New untracked requested doc file present:
+  - Project_Resourse/Tamplate_of_Graduation_Project.md
+
+### Verified quantitative facts refreshed
+- MaleX test split:
+  - benign = 17,153
+  - malware = 15,851
+  - total = 33,004
+- Primary fixed adversarial set (malex):
+  - fgsm_eps0.05 PNG count = 15,851
+  - pgd_eps0.05_steps40 PNG count = 15,851
+- Legacy fixed set:
+  - fgsm_eps0.05 PNG count = 847
+  - pgd_eps0.05_steps40 PNG count = 847
+
+### Checkpoint provenance refresh
+- at_3c2d_full_checkpoint.pth:
+  - epoch_zero_based = 39
+  - best_robust_val_acc = 74.12388308344691
+  - best_epoch = 35
+- Sidecar metadata file for current best weights:
+  - not present yet

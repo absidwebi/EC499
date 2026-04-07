@@ -35,9 +35,18 @@ import sys
 import argparse
 import time
 import torch
+import numpy as np
 from pathlib import Path
 from PIL import Image
 from torchvision import transforms
+from sklearn.metrics import (
+    balanced_accuracy_score,
+    confusion_matrix,
+    f1_score,
+    matthews_corrcoef,
+    roc_auc_score,
+    roc_curve,
+)
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -91,6 +100,69 @@ TRANSFORM = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.5], std=[0.5]),
 ])
+
+
+def _safe_div(num, den):
+    return float(num / den) if den else 0.0
+
+
+def _tpr_at_fpr(labels, probs, target_fpr=0.01):
+    """Return max TPR where FPR <= target_fpr."""
+    if len(np.unique(labels)) < 2:
+        return float("nan")
+    fpr, tpr, _ = roc_curve(labels, probs)
+    mask = fpr <= target_fpr
+    if not np.any(mask):
+        return 0.0
+    return float(np.max(tpr[mask]))
+
+
+def _compute_full_metrics(labels, logits):
+    probs = torch.sigmoid(torch.tensor(logits)).numpy()
+    preds = (probs >= 0.5).astype(int)
+
+    cm = confusion_matrix(labels, preds, labels=[0, 1])
+    tn, fp, fn, tp = cm.ravel()
+
+    accuracy = (preds == labels).mean() * 100.0
+    specificity = _safe_div(tn, tn + fp)
+    fpr = _safe_div(fp, fp + tn)
+    fnr = _safe_div(fn, fn + tp)
+    try:
+        auc = roc_auc_score(labels, probs)
+    except Exception:
+        auc = float("nan")
+
+    return {
+        "accuracy": float(accuracy),
+        "confusion_matrix": cm.tolist(),
+        "confusion_counts": {
+            "tn": int(tn),
+            "fp": int(fp),
+            "fn": int(fn),
+            "tp": int(tp),
+        },
+        "precision_per_class": {
+            "benign": _safe_div(tn, tn + fn),
+            "malware": _safe_div(tp, tp + fp),
+        },
+        "recall_per_class": {
+            "benign": _safe_div(tn, tn + fp),
+            "malware": _safe_div(tp, tp + fn),
+        },
+        "specificity": float(specificity),
+        "fpr": float(fpr),
+        "fnr": float(fnr),
+        "balanced_accuracy": float(balanced_accuracy_score(labels, preds)),
+        "mcc": float(matthews_corrcoef(labels, preds)),
+        "f1_macro": float(f1_score(labels, preds, average="macro", zero_division=0)),
+        "f1_binary": float(f1_score(labels, preds, pos_label=1, zero_division=0)),
+        "auc": float(auc),
+        "threshold_metrics": {
+            "tpr_at_fpr_1pct": _tpr_at_fpr(labels, probs, target_fpr=0.01),
+            "tpr_at_fpr_5pct": _tpr_at_fpr(labels, probs, target_fpr=0.05),
+        },
+    }
 
 
 def load_model(model_tag):
@@ -153,9 +225,9 @@ def evaluate_on_subset(model, subset_name):
     }
 
 
-def evaluate_clean_accuracy(model):
+def evaluate_clean_metrics(model):
     """
-    Evaluate model clean accuracy on MaleX test set.
+    Evaluate model on clean MaleX test set with full metric suite.
     Uses the dataset loader rather than adversarial images.
     """
     from dataset_loader import get_data_loaders
@@ -164,14 +236,18 @@ def evaluate_clean_accuracy(model):
     _, _, test_loader, _ = get_data_loaders(
         data_dir=MALEX_DATASET_DIR_STR, batch_size=64, num_workers=0
     )
-    correct = total = 0
+    all_logits = []
+    all_labels = []
     with torch.no_grad():
         for images, labels in test_loader:
             images, labels = images.to(DEVICE), labels.to(DEVICE)
-            preds = (model(images).squeeze(1) > 0).long()
-            correct += (preds == labels).sum().item()
-            total += labels.size(0)
-    return 100.0 * correct / total if total > 0 else 0.0
+            logits = model(images).squeeze(1)
+            all_logits.append(logits.cpu())
+            all_labels.append(labels.cpu())
+
+    logits = torch.cat(all_logits).numpy()
+    labels = torch.cat(all_labels).numpy()
+    return _compute_full_metrics(labels, logits)
 
 
 def run_evaluation(model_tags, log_lines):
@@ -185,10 +261,14 @@ def run_evaluation(model_tags, log_lines):
 
         model, label = load_model(tag)
 
-        # Clean accuracy
-        print("[*] Measuring clean test accuracy...")
-        clean_acc = evaluate_clean_accuracy(model)
-        print(f"    Clean accuracy: {clean_acc:.2f}%")
+        # Clean metrics
+        print("[*] Measuring clean test metrics...")
+        clean_metrics = evaluate_clean_metrics(model)
+        print(f"    Clean accuracy: {clean_metrics['accuracy']:.2f}%")
+        print(
+            f"    TPR@FPR<=1%: {clean_metrics['threshold_metrics']['tpr_at_fpr_1pct']:.4f} "
+            f"| MCC: {clean_metrics['mcc']:.4f}"
+        )
 
         # Adversarial accuracy on each subset
         adv_results = {}
@@ -208,7 +288,7 @@ def run_evaluation(model_tags, log_lines):
 
         results[tag] = {
             "label": label,
-            "clean_acc": clean_acc,
+            "clean_metrics": clean_metrics,
             "adv_results": adv_results,
         }
 
@@ -216,7 +296,37 @@ def run_evaluation(model_tags, log_lines):
         log_lines.append(f"\n{'=' * 65}\n")
         log_lines.append(f"Model: {label}\n")
         log_lines.append(f"{'=' * 65}\n")
-        log_lines.append(f"Clean Test Accuracy : {clean_acc:.4f}%\n")
+        log_lines.append("\nClean Test Metrics (full suite):\n")
+        log_lines.append(f"Accuracy            : {clean_metrics['accuracy']:.4f}%\n")
+        log_lines.append(
+            "Confusion Counts    : "
+            f"TN={clean_metrics['confusion_counts']['tn']} "
+            f"FP={clean_metrics['confusion_counts']['fp']} "
+            f"FN={clean_metrics['confusion_counts']['fn']} "
+            f"TP={clean_metrics['confusion_counts']['tp']}\n"
+        )
+        log_lines.append(
+            "Precision (B/M)     : "
+            f"{clean_metrics['precision_per_class']['benign']:.4f} / "
+            f"{clean_metrics['precision_per_class']['malware']:.4f}\n"
+        )
+        log_lines.append(
+            "Recall (B/M)        : "
+            f"{clean_metrics['recall_per_class']['benign']:.4f} / "
+            f"{clean_metrics['recall_per_class']['malware']:.4f}\n"
+        )
+        log_lines.append(f"Specificity (TNR)   : {clean_metrics['specificity']:.4f}\n")
+        log_lines.append(f"FPR / FNR           : {clean_metrics['fpr']:.4f} / {clean_metrics['fnr']:.4f}\n")
+        log_lines.append(f"Balanced Accuracy   : {clean_metrics['balanced_accuracy']:.4f}\n")
+        log_lines.append(f"MCC                 : {clean_metrics['mcc']:.4f}\n")
+        log_lines.append(f"F1 Macro            : {clean_metrics['f1_macro']:.4f}\n")
+        log_lines.append(f"F1 Malware          : {clean_metrics['f1_binary']:.4f}\n")
+        log_lines.append(f"AUC-ROC             : {clean_metrics['auc']:.4f}\n")
+        log_lines.append(
+            "TPR@FPR<=1% / 5%    : "
+            f"{clean_metrics['threshold_metrics']['tpr_at_fpr_1pct']:.4f} / "
+            f"{clean_metrics['threshold_metrics']['tpr_at_fpr_5pct']:.4f}\n"
+        )
         log_lines.append("\nAdversarial Evaluation (Fixed Test Set):\n")
         log_lines.append(f"{'Attack':<35} {'Recall':>8} {'Evasion':>9} {'Correct':>9} {'Total':>7}\n")
         log_lines.append("-" * 72 + "\n")
@@ -252,7 +362,7 @@ def print_comparison_table(results):
     # Clean accuracy row
     row = f"{'Clean Accuracy':<35}"
     for tag in models:
-        row += f" {results[tag]['clean_acc']:>13.2f}%"
+        row += f" {results[tag]['clean_metrics']['accuracy']:>13.2f}%"
     print(row)
 
     # Adversarial rows
