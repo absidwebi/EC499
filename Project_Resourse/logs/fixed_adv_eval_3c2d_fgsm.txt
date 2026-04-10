@@ -1,0 +1,29 @@
+EC499 - Fixed Adversarial Test Set Evaluation
+Timestamp : 2026-04-10 21:04:26
+Model(s)  : 3c2d_fgsm
+Device    : cuda
+Adv set   : /home/alucard-00/EC499/Project_Resourse/adversarial_test_set_malex
+
+=================================================================
+Model: 3C2D Adversarially Trained (FGSM)
+=================================================================
+
+Clean Test Metrics (full suite):
+Accuracy            : 77.9633%
+Confusion Counts    : TN=14596 FP=2557 FN=4716 TP=11135
+Precision (B/M)     : 0.7558 / 0.8132
+Recall (B/M)        : 0.8509 / 0.7025
+Specificity (TNR)   : 0.8509
+FPR / FNR           : 0.1491 / 0.2975
+Balanced Accuracy   : 0.7767
+MCC                 : 0.5612
+F1 Macro            : 0.7772
+F1 Malware          : 0.7538
+AUC-ROC             : 0.8729
+TPR@FPR<=1% / 5%    : 0.3763 / 0.5325
+
+Adversarial Evaluation (Fixed Test Set):
+Attack                                Recall   Evasion   Correct   Total
+------------------------------------------------------------------------
+fgsm_eps0.05                          68.92%    31.08%     10925   15851
+pgd_eps0.05_steps40                   68.81%    31.19%     10907   15851

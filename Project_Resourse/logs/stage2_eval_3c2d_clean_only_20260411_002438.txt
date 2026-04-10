@@ -1,0 +1,23 @@
+EC499 - Stage 2 Clean Baseline Evaluation (3C2D only)
+Timestamp: 2026-04-11 00:25:21
+Device: cuda
+
+
+=== MaleX3C2D (Fixed, Clean) ===
+Test Accuracy: 85.29%
+Confusion Matrix:
+[[14947  2206]
+ [ 2648 13203]]
+Confusion Counts: TN=14947 FP=2206 FN=2648 TP=13203
+Precision (benign/malware): 0.8495 / 0.8568
+Recall (benign/malware): 0.8714 / 0.8329
+Specificity (TNR): 0.8714
+FPR / FNR: 0.1286 / 0.1671
+Balanced Accuracy: 0.8522
+MCC: 0.7053
+F1 Score (Macro): 0.8525
+F1 Score (Malware): 0.8447
+AUC-ROC: 0.9316
+TPR@FPR<=1% / TPR@FPR<=5%: 0.5138 / 0.7018
+Logit Mean/Std (Benign): -2.67 ± 2.56
+Logit Mean/Std (Malware): 3.74 ± 4.19

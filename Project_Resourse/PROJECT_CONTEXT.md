@@ -4,26 +4,26 @@ Student: Abdulsalam Ashraf Aldwebi (ID: 2210245306)
 Supervisor: Dr. Suad Elgeder | University of Tripoli
 GitHub: https://github.com/absidwebi/EC499
 Primary machine: Ubuntu Linux, RTX 4060, /home/alucard-00/EC499
-Primary interpreter for current cycle: /home/alucard-00/EC499/venv/bin/python
+Primary interpreter: /home/alucard-00/EC499/venv/bin/python
 
-Last updated: 2026-04-07 (documentation synchronization + Stage 3 metric/provenance code upgrade)
+Last updated: 2026-04-11 (FGSM continuation finalized + Stage 2/Stage 3 metric pack refreshed)
 
 ---
 
 ## 1. Project Objective
 
-Build a reproducible malware-image binary classifier and rigorously evaluate adversarial vulnerability and defense for a thesis-grade study, then expose the defended-vs-clean behavior through a static-analysis Stage 4 inference demo.
+Build a reproducible malware-image binary classifier and rigorously evaluate adversarial vulnerability and defense for thesis-grade reporting.
 
 Binary task:
 - Benign = 0
 - Malware = 1
 
-Method constraints actively enforced in pipeline code:
-- Single-logit output and BCEWithLogitsLoss
+Hard constraints enforced in active code:
+- Single-logit output with BCEWithLogitsLoss
 - Adversarial clamp range [-1.0, 1.0]
 - No geometric augmentation in byteplot pipeline
-- num_workers = 0 for Linux/CUDA stability
-- Centralized paths from config.py (avoid hardcoded machine paths in active scripts)
+- num_workers = 0 on Linux/CUDA runs
+- Paths imported from config.py (no hardcoded active script paths)
 
 ---
 
@@ -36,125 +36,159 @@ Source roots:
 Working split root:
 - /home/alucard-00/EC499/Project_Resourse/archive/malex_dataset/
 
-Current verified split sizes:
-- Train total: 287,560
-  - Train benign: 143,780
-  - Train malware: 143,780
-- Val total: 33,015
-- Test total: 33,004
-  - Test benign: 17,153
-  - Test malware: 15,851
+Verified split sizes:
+- Train: 287,560 (143,780 benign + 143,780 malware)
+- Val: 33,015
+- Test: 33,004 (17,153 benign + 15,851 malware)
 
-Open scientific risk still tracked:
-- Cross-split overlap remediation is not closed yet and remains a thesis-quality blocker for final claims.
+Primary fixed adversarial set:
+- Project_Resourse/adversarial_test_set_malex/fgsm_eps0.05: 15,851 PNG
+- Project_Resourse/adversarial_test_set_malex/pgd_eps0.05_steps40: 15,851 PNG
 
----
-
-## 3. Stage 2 Baseline Selection (Locked)
-
-Final clean candidates:
-- MaleX3C2D
-- ResNet-18 pretrained grayscale
-
-Authoritative artifact:
-- Project_Resourse/base_model_testset_results.json
-
-Selected Stage 3 baseline:
-- MaleX3C2D
-
-Selection rationale:
-- Slight edge on test-set accuracy and malware-focused F1 with comparable macro behavior.
+Legacy fixed set (kept for reference only):
+- Project_Resourse/adversarial_test_set/fgsm_eps0.05: 847 PNG
+- Project_Resourse/adversarial_test_set/pgd_eps0.05_steps40: 847 PNG
 
 ---
 
-## 4. Stage 3 Defense Track (Current Canon)
+## 3. Model Lineup and Verified Parameter Counts
 
-### 4.1 Part 1 - Clean vulnerability (complete)
+Canonical model set for final Stage 3 comparison:
+- 3C2D clean baseline
+- 3C2D adversarially trained (PGD)
+- 3C2D adversarially trained (FGSM)
 
-Script:
-- Project_Resourse/evaluate_attacks.py
-
-Artifact:
-- Project_Resourse/logs/attack_evaluation_results_3c2d.txt
-
-Outcome:
-- Clean baseline collapses under stronger FGSM/PGD settings, validating need for adversarial training.
-
-### 4.2 Part 2 - PGD adversarial training (complete)
-
-Canonical run log:
-- run_logs/adversarial_train_ 3C2D_Fixed_malex_stage3.log
-
-Canonical per-epoch text log:
-- Project_Resourse/logs/adversarial_training_log_3c2d.txt
-
-Final run outcome:
-- Early stopping at epoch 40/50
-- Best robust validation accuracy: 74.123883% at epoch 35
-
-Primary artifacts:
-- Project_Resourse/models/3c2d_malex_adversarially_trained.pth
-- Project_Resourse/models/at_3c2d_full_checkpoint.pth
-- Project_Resourse/logs/adversarial_training_curve_3c2d.png
-
-Checkpoint values currently confirmed from at_3c2d_full_checkpoint.pth:
-- epoch (zero-based): 39
-- best_robust_val_acc: 74.12388308344691
-- best_epoch: 35
-
-Important provenance note:
-- Code now supports writing a best-weights sidecar metadata JSON.
-- Existing historical best weights were produced before this sidecar existed, so the metadata file is not yet present for current artifacts.
-
-### 4.3 Part 2b - FGSM defense branch (complete)
+Verified parameter counts (run on local environment, 2026-04-11):
+- MaleX3C2D: 1,273,345
+- ResNet-18 pretrained grayscale: 11,170,753
 
 Artifacts:
+- Project_Resourse/models/3c2d_malex_clean_vulnerable.pth
+- Project_Resourse/models/3c2d_malex_adversarially_trained.pth
 - Project_Resourse/models/3c2d_malex_fgsm_adversarially_trained.pth
+- Project_Resourse/models/at_3c2d_full_checkpoint.pth
 - Project_Resourse/models/at_3c2d_fgsm_full_checkpoint.pth
-- Project_Resourse/logs/adversarial_training_log_fgsm.txt
 
-Reference summary:
-- best_robust_val_acc: 72.7306%
-- best_epoch: 19
+---
 
-### 4.4 Deterministic fixed adversarial comparison (complete)
+## 4. Stage 2 Baseline Metrics (Clean 3C2D)
 
-Primary fixed-set path used for MaleX-scale comparison:
-- Project_Resourse/adversarial_test_set_malex/
-  - fgsm_eps0.05: 15,851 PNG images
-  - pgd_eps0.05_steps40: 15,851 PNG images
+Latest dedicated Stage 2 clean-only artifact:
+- run_logs/stage2_eval_3c2d_clean_only_20260411_002438.log
+- Project_Resourse/logs/stage2_eval_3c2d_clean_only_20260411_002438.txt
 
-Legacy small fixed set still exists (not primary for final report):
-- Project_Resourse/adversarial_test_set/
-  - fgsm_eps0.05: 847 PNG images
-  - pgd_eps0.05_steps40: 847 PNG images
+Results:
+- Accuracy: 85.29%
+- Confusion: TN=14947 FP=2206 FN=2648 TP=13203
+- Precision (benign/malware): 0.8495 / 0.8568
+- Recall (benign/malware): 0.8714 / 0.8329
+- Balanced accuracy: 0.8522
+- MCC: 0.7053
+- F1 macro / malware: 0.8525 / 0.8447
+- AUC-ROC: 0.9316
+- TPR@FPR<=1% / <=5%: 0.5138 / 0.7018
+
+---
+
+## 5. Stage 3 Defense Track (Canonical 2026-04-11)
+
+### 5.1 PGD adversarial training
+
+Status: complete.
+
+Canonical training summary:
+- Per-epoch log: Project_Resourse/logs/adversarial_training_log_3c2d.txt
+- Full checkpoint: Project_Resourse/models/at_3c2d_full_checkpoint.pth
+- Best robust val acc: 74.123883% at epoch 35
+- Early stop point: epoch 40/50
+
+### 5.2 FGSM adversarial training
+
+Status: complete with continuation.
+
+Continuation details:
+- Canonical run log: run_logs/adversarial_train_fgsm_20260401_052733.log
+- Original segment: epochs 1-20, best 72.7306% at epoch 19
+- Continuation segment: resumed from epoch 20 and continued to epoch 32
+- Continuation mode used best epoch-19 weights as restart state
+- Early stopping triggered at epoch 32 (with /80 max epoch budget)
+- New best robust val acc: 74.329850% at epoch 27
+
+Canonical FGSM checkpoint decision:
+- Canonical FGSM best checkpoint is now the continued model at:
+  Project_Resourse/models/3c2d_malex_fgsm_adversarially_trained.pth
+- Canonical full checkpoint state is:
+  Project_Resourse/models/at_3c2d_fgsm_full_checkpoint.pth
+  with epoch_zero_based=31, best_epoch=27, best_robust_val_acc=74.329850.
+
+Discrepancy resolution note (77.33 vs 77.96 clean FGSM accuracy):
+- 77.33% appears in older fixed-set evaluation artifacts before continuation.
+- 77.9633% appears in post-continuation artifacts and is now canonical.
+
+### 5.3 Stage 3 fixed-set all-model comparison (latest)
 
 Evaluator:
-- Project_Resourse/evaluate_attacks_fixed.py
+- Project_Resourse/evaluate_attacks_fixed.py --model all
 
-Output artifact:
+Latest artifacts:
+- run_logs/stage3_fixed_eval_all_three_models_20260411_001931.log
+- Project_Resourse/logs/fixed_adv_eval_all_three_models_20260411_001931.txt
+- Project_Resourse/logs/stage3_complete_comparison_all3_20260411_001931.txt
 - Project_Resourse/logs/fixed_adv_eval_all.txt
 
-### 4.5 Clean vs AT mirrored attack comparison (post-epoch-35 reference)
+Key comparison metrics:
 
-Artifacts:
-- Project_Resourse/logs/attack_evaluation_results_3c2d.txt
-- Project_Resourse/logs/attack_evaluation_results_3c2d_at.txt
-- Project_Resourse/logs/attack_comparison_3c2d_clean_vs_at_post35.txt
-
-Reference deltas:
-- Clean (no attack): clean 85.29% vs AT 80.03% (delta -5.26 pp)
-- FGSM e=0.10: clean 3.49% vs AT 71.39% (delta +67.90 pp)
-- PGD e=0.05 steps=40: clean 0.62% vs AT 74.22% (delta +73.60 pp)
+| Model | Clean Accuracy | FGSM Recall | FGSM Evasion | PGD Recall | PGD Evasion |
+|---|---:|---:|---:|---:|---:|
+| 3C2D Clean | 85.2927% | 15.29% | 84.71% | 0.53% | 99.47% |
+| 3C2D AT (PGD) | 80.0297% | 74.97% | 25.03% | 74.94% | 25.06% |
+| 3C2D AT (FGSM) | 77.9633% | 68.92% | 31.08% | 68.81% | 31.19% |
 
 Interpretation:
-- Strong and consistent robustness gains under attack with expected clean-accuracy tradeoff.
+- PGD AT remains strongest on fixed-set robustness.
+- FGSM AT improved materially after continuation and is now stronger than its pre-continuation state.
+- Clean model retains highest clean accuracy but collapses under fixed adversarial attacks.
 
 ---
 
-## 5. Stage 4 Inference and Deployment (Verified Scope)
+## 6. Log and Curve Completeness Artifacts
 
-### 5.1 Implemented deployment paths
+Created for reporting completeness from run_logs/txt reconstruction:
+- Project_Resourse/logs/3C2D_MaleX_clean_Baseline.txt
+- Project_Resourse/logs/Resnet18_MaleX_clean_Baseline.txt
+- Project_Resourse/logs/3C2D MaleX clean Baseline.txt
+- Project_Resourse/logs/Resnet18 MaleX clean Baseline.txt
+- Project_Resourse/logs/adversarial_training_log_3c2d_reconstructed.txt
+- Project_Resourse/logs/adversarial_training_log_fgsm_reconstructed.txt
+- Project_Resourse/logs/training_curve_3c2d_clean_baseline.png
+- Project_Resourse/logs/training_curve_3c2d_fixed.png
+- Project_Resourse/logs/training_curve_resnet18_malex_clean_baseline.png
+- Project_Resourse/logs/adversarial_training_curve_3c2d.png (reconstructed full-history plot)
+- Project_Resourse/logs/adversarial_training_curve_fgsm.png (reconstructed full-history plot)
+
+---
+
+## 7. Code Changes Since Last Documentation Sync
+
+Updated Python script in this cycle:
+- Project_Resourse/adversarial_train_fgsm.py
+
+What changed:
+- Added FGSM_NUM_EPOCHS env override.
+- Added FGSM_EARLY_STOP_PATIENCE env override.
+- Added FGSM_RESUME_FROM_BEST_WEIGHTS mode.
+- Added logic to restore best robust weights for continuation while preserving checkpoint epoch/log continuity.
+
+Why:
+- Needed controlled continuation from epoch 20 using best epoch-19 weights and append-only logging to canonical FGSM run log.
+
+No new model architecture changes were introduced in this cycle.
+
+---
+
+## 8. Stage 4 Inference Status
+
+Stage 4 remains implemented and previously validated.
 
 Core files:
 - Project_Resourse/inference.py
@@ -162,102 +196,29 @@ Core files:
 - Project_Resourse/templates/index.html
 - Project_Resourse/Dockerfile
 
-Active endpoints:
-- GET /
-- GET /health
-- POST /predict
-- POST /compare
-
-### 5.2 Runtime checks confirmed in this cycle
-
+Validated behavior:
 - /health returns status JSON
-- /compare rejects non-PE inputs with HTTP 400
-- /compare accepts valid PE and returns HTTP 200 with comparison payload keys:
-  - byteplot_b64
-  - clean_256_b64
-  - adv_256_b64
-  - clean_model
-  - at_model
-  - attack_params
+- /compare rejects invalid non-PE inputs with HTTP 400
+- /compare accepts valid PE and returns comparison payload (clean/adv visuals and model outputs)
 
-### 5.3 Docker networking clarification (important)
-
-Empirical behavior in this environment:
-- Using --network=none with -p did not provide browser reachability.
-- Bridge networking with -p 5000:5000 was required for local UI access.
-
-Reproducibility interpretation:
-- Current Docker setup is reproducible for Stage 4 inference/demo delivery.
-- It is not a full end-to-end training reproducibility package yet.
+Environment note:
+- Bridge networking with -p is required for browser access in this environment.
 
 ---
 
-## 6. Code Changes in Current Update Window (Python)
+## 9. Open Risks and Unchecked Requirements
 
-### 6.1 Project_Resourse/evaluate_base_models_testset.py
-
-Upgrades:
-- Added full confusion-style metric suite helper
-- Added threshold metrics (TPR at constrained FPR)
-- Added balanced accuracy, MCC, per-class precision/recall, specificity, FPR/FNR
-- Expanded console and JSON reporting payload
-
-Why:
-- Stage 2 model selection and thesis tables require richer statistical evidence than accuracy-only output.
-
-### 6.2 Project_Resourse/evaluate_attacks.py
-
-Upgrades:
-- Refactored evaluate() to return full metrics dictionary instead of only accuracy
-- Added per-setting metrics for clean, FGSM, and PGD evaluations
-- Added detailed metrics section in output log while preserving summary table
-
-Why:
-- Stage 3 vulnerability analysis now captures class-level behavior and threshold-sensitive robustness quality.
-
-### 6.3 Project_Resourse/evaluate_attacks_fixed.py
-
-Upgrades:
-- Added full clean-test metric block for each model
-- Retained malware-only deterministic adversarial recall/evasion comparison logic
-- Added threshold metrics and AUC-safe handling
-
-Why:
-- Deterministic fixed-set evaluation now includes complete clean baseline quality context for defended-vs-clean interpretation.
-
-### 6.4 Project_Resourse/adversarial_train.py
-
-Upgrades:
-- Added write_best_weights_metadata() helper for sidecar provenance JSON
-- Added backfill behavior during resume when historical best weights exist without sidecar
-- Metadata schema includes:
-  - model identity
-  - best epoch and robust score
-  - clean-model source path
-  - attack config
-  - run config and UTC update time
-
-Why:
-- Improve experiment traceability and checkpoint provenance for thesis and audit requirements.
+1) Cross-split overlap remediation is still not closed.
+2) Stage 4 committee/demo bundle packaging is still pending.
+3) evaluate_base_models_testset.py has a relative output-path assumption when run from inside Project_Resourse; direct script execution from that cwd can fail JSON write.
+4) Sidecar metadata is implemented in PGD trainer but is not uniformly standardized across all historical artifacts.
+5) Workspace still contains large unrelated untracked binary/data files that must stay out of scoped commits.
 
 ---
 
-## 7. Known Open Items and Risks
+## 10. Immediate Next Actions
 
-1) Cross-split overlap remediation is still not finalized.
-2) One final mirrored attack-evaluation pass using locked reporting protocol is still recommended after metric-script upgrades.
-3) Stage 4 committee demo package is not yet fully assembled (fixed sample list + reproducible command/output bundle).
-4) Workspace contains many large untracked binaries and archives; these must stay out of normal source commits.
-5) Best-weights sidecar metadata file is not present yet for existing PGD best artifact (feature is now implemented in code).
-
----
-
-## 8. Immediate Next Actions
-
-1) Run final audit-grade evaluation pass with upgraded metric scripts and archive dated artifacts.
-2) Resolve overlap risk and rerun overlap diagnostics before thesis finalization.
-3) Produce Stage 4 appendix bundle:
-   - one benign PE, one malware PE, one invalid file
-   - exact commands
-   - expected API outputs and screenshots
-4) Materialize sidecar metadata for locked best checkpoint by resume/backfill workflow or controlled metadata generation pass.
+1) Lock report tables to canonical 2026-04-11 artifacts listed above.
+2) Re-run any remaining final audit scripts only against canonical checkpoints.
+3) Resolve cross-split overlap risk and refresh diagnostics once complete.
+4) Assemble Stage 4 appendix package (sample files, exact commands, expected output captures).

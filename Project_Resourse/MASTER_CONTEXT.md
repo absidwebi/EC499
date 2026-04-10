@@ -913,3 +913,130 @@ Impact:
   - best_epoch = 35
 - Sidecar metadata file for current best weights:
   - not present yet
+
+---
+
+## 2026-04-11 Delta Update (FGSM Continuation Finalization + Final 3-Model Comparison)
+
+### D31 - Canonical FGSM Checkpoint Is the Continued Run, Not the Legacy Epoch-19 Snapshot
+Decision:
+- Treat the continued FGSM checkpoint as canonical for report tables and all downstream comparisons.
+
+Reason:
+- The FGSM branch was explicitly resumed from epoch 20 using best epoch-19 weights, then continued until no improvement.
+- The continued run achieved a strictly better robust validation peak than the original 20-epoch run.
+
+Outcome:
+- Canonical FGSM best is now 74.329850% at epoch 27.
+- Full checkpoint state now reports epoch_zero_based=31, best_epoch=27, epochs_no_improve=5.
+
+### D32 - Keep One Canonical FGSM Run Log by Appending Continuation Output
+Decision:
+- Continue writing FGSM progress into the same historical run log via append (`tee -a`).
+
+Reason:
+- Preserves complete provenance chain from epoch 1 through resumed epochs without fragmented run history.
+
+Outcome:
+- `run_logs/adversarial_train_fgsm_20260401_052733.log` now contains epochs 1-32 across both run segments.
+
+### D33 - Final Stage 3 Comparison Must Use Fixed Set + Full Stage-2 Metric Suite
+Decision:
+- Use `evaluate_attacks_fixed.py --model all` as the canonical final Stage 3 comparator for clean/PGD/FGSM.
+
+Reason:
+- The script now reports deterministic fixed-set attack outcomes while also carrying the full clean-test metrics used in Stage 2.
+
+Outcome:
+- Fresh all-model artifacts were generated on 2026-04-11 and marked canonical for report use.
+
+### D34 - Training-Curve Completeness Should Be Reconstructed from Logs After Resume Cycles
+Decision:
+- Reconstruct curve and per-epoch reporting artifacts from canonical run logs and per-epoch text logs.
+
+Reason:
+- Resume cycles can make older standalone curve images incomplete or ambiguous if not regenerated from full history.
+
+Outcome:
+- Clean and adversarial per-epoch text/curve artifacts were regenerated and synchronized.
+
+### D35 - Parameter Counts Must Be Verified On-Machine Before Final Writeup
+Decision:
+- Recompute parameter counts directly from `models.py` in local environment before updating thesis/report sections.
+
+Outcome:
+- Verified: 3C2D = 1,273,345 and ResNet-18 pretrained grayscale = 11,170,753.
+
+---
+
+## Additional Bug Log Entries (2026-04-11)
+
+### Bug 25 - FGSM Canonical-Metrics Ambiguity Across Historical Logs
+Symptom:
+- FGSM clean accuracy appeared as both 77.33% and 77.96% across different fixed-eval files.
+
+Cause:
+- Older logs were generated before FGSM continuation; newer logs used post-continuation checkpoint.
+
+Fix:
+- Re-ran fixed-set evaluations against canonical continued FGSM checkpoint and updated comparison artifacts.
+
+Impact:
+- Canonical FGSM clean accuracy is now 77.9633% in latest all-model fixed-set outputs.
+
+### Bug 26 - `evaluate_base_models_testset.py` CWD-Sensitive Output Path
+Symptom:
+- Running the script from inside `Project_Resourse/` can fail writing JSON due to relative path `Project_Resourse/base_model_testset_results.json`.
+
+Cause:
+- Output path is relative to repo root assumption, not script directory.
+
+Fix (workflow-level):
+- Run from repo root or call evaluation helpers programmatically for scoped single-model outputs.
+
+Impact:
+- Stage 2 clean-only metrics were generated successfully via existing script functions with explicit output routing.
+
+### Bug 27 - First FGSM Continuation Launch Failed Due to Wrong CWD Script Resolution
+Symptom:
+- Initial background launch attempted `adversarial_train_fgsm.py` from wrong working directory and exited with file-not-found.
+
+Cause:
+- Script invoked by relative path while shell CWD was not `Project_Resourse`.
+
+Fix:
+- Relaunched with absolute script path and same append-log policy.
+
+Impact:
+- Continuation completed successfully to early stop at epoch 32.
+
+---
+
+## 2026-04-11 Execution Snapshot
+
+### E1. FGSM continuation completion
+- Resume source: `models/at_3c2d_fgsm_full_checkpoint.pth` at epoch 20.
+- Continuation policy: load best epoch-19 FGSM robust weights, keep checkpoint/log continuity.
+- Continued epochs: 21-32.
+- Early stop: epoch 32.
+- New best robust validation: 74.33% at epoch 27.
+
+### E2. Final Stage 3 all-model fixed-set evaluation
+- Script: `Project_Resourse/evaluate_attacks_fixed.py --model all`
+- Run log: `run_logs/stage3_fixed_eval_all_three_models_20260411_001931.log`
+- Metric txt: `Project_Resourse/logs/fixed_adv_eval_all_three_models_20260411_001931.txt`
+- Comparison txt: `Project_Resourse/logs/stage3_complete_comparison_all3_20260411_001931.txt`
+
+Key results:
+- Clean 3C2D: clean acc 85.2927%, FGSM recall 15.29%, PGD recall 0.53%
+- PGD AT 3C2D: clean acc 80.0297%, FGSM recall 74.97%, PGD recall 74.94%
+- FGSM AT 3C2D (continued): clean acc 77.9633%, FGSM recall 68.92%, PGD recall 68.81%
+
+### E3. Stage 2 clean baseline refresh (3C2D only)
+- Run log: `run_logs/stage2_eval_3c2d_clean_only_20260411_002438.log`
+- Txt output: `Project_Resourse/logs/stage2_eval_3c2d_clean_only_20260411_002438.txt`
+- Result remains stable at clean accuracy 85.29% with full metric set preserved.
+
+### E4. Reporting completeness artifacts refreshed
+- Clean baseline epoch logs and curves reconstructed from `run_logs/`.
+- PGD/FGSM reconstructed per-epoch summaries produced for appendix/audit workflow.

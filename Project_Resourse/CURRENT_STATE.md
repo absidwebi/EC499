@@ -1,6 +1,6 @@
 # EC499 - Current Project State
 
-Last updated: 2026-04-07 (doc sync + Stage 3 metrics/provenance code update)
+Last updated: 2026-04-11 (FGSM continuation completion + Stage 2/3 final metric refresh)
 
 ---
 
@@ -9,83 +9,95 @@ Last updated: 2026-04-07 (doc sync + Stage 3 metrics/provenance code update)
 | Stage | Status | Notes |
 |---|---|---|
 | Stage 1 - Dataset Preparation | DONE | MaleX split pipeline active in archive/malex_dataset |
-| Stage 2 - Base Model Selection | DONE | 3C2D selected |
-| Stage 3 Part 1 - Attack Evaluation | DONE | Vulnerability confirmed |
+| Stage 2 - Base Model Selection | DONE | 3C2D selected; clean baseline metrics re-run and archived |
+| Stage 3 Part 1 - Attack Evaluation | DONE | Clean vulnerability confirmed |
 | Stage 3 Part 2 - PGD Adversarial Training | DONE | Early stop epoch 40/50, best robust 74.123883% at epoch 35 |
-| Stage 3 Part 2b - FGSM Branch | DONE | Best robust 72.7306% at epoch 19 |
-| Stage 4 - Inference API + Demo | IMPLEMENTED + VERIFIED | /predict and /compare active |
+| Stage 3 Part 2b - FGSM Adversarial Training | DONE | Continued to epoch 32 (from epoch 20 resume), best robust 74.329850% at epoch 27 |
+| Stage 3 Fixed-Set 3-Model Comparison | DONE | Fresh all-model run generated on 2026-04-11 |
+| Stage 4 - Inference API + Demo | IMPLEMENTED + VERIFIED | /predict and /compare validated; bridge network with -p required |
 
 ---
 
-## 2. Verified Quantitative Baseline
+## 2. Canonical Checkpoints and Training State
 
-Dataset split counts:
-- Train: 287,560 (143,780 benign + 143,780 malware)
-- Val: 33,015
-- Test: 33,004 (17,153 benign + 15,851 malware)
+3C2D clean baseline:
+- Project_Resourse/models/3c2d_malex_clean_vulnerable.pth
 
-Primary fixed adversarial test set (MaleX-scale):
-- Project_Resourse/adversarial_test_set_malex/fgsm_eps0.05 -> 15,851 PNG
-- Project_Resourse/adversarial_test_set_malex/pgd_eps0.05_steps40 -> 15,851 PNG
+3C2D AT (PGD):
+- Project_Resourse/models/3c2d_malex_adversarially_trained.pth
+- Project_Resourse/models/at_3c2d_full_checkpoint.pth
+- Best robust val acc: 74.123883% at epoch 35
 
-PGD checkpoint summary:
-- at_3c2d_full_checkpoint.pth exists
-- checkpoint epoch (zero-based): 39
-- best_robust_val_acc: 74.12388308344691
-- best_epoch: 35
+3C2D AT (FGSM):
+- Project_Resourse/models/3c2d_malex_fgsm_adversarially_trained.pth
+- Project_Resourse/models/at_3c2d_fgsm_full_checkpoint.pth
+- Checkpoint state: epoch_zero_based=31, best_epoch=27, best_robust_val_acc=74.329850
 
----
-
-## 3. What Changed In This Update Window
-
-Updated scripts:
-- Project_Resourse/evaluate_base_models_testset.py
-- Project_Resourse/evaluate_attacks.py
-- Project_Resourse/evaluate_attacks_fixed.py
-- Project_Resourse/adversarial_train.py
-
-Change set summary:
-- Added full confusion-style metrics and threshold metrics (TPR@FPR constraints).
-- Added class-wise precision/recall, specificity, FPR/FNR, balanced accuracy, MCC, AUC guards.
-- Expanded attack logs with detailed per-setting metric blocks.
-- Added best-checkpoint sidecar metadata writer plus resume backfill path.
-
-Current artifact reality:
-- Sidecar metadata capability is in code.
-- Existing PGD best weight artifact still has no sidecar file yet.
+Canonical FGSM decision:
+- The canonical FGSM checkpoint is the continued run (best epoch 27), not the earlier epoch-19 state.
 
 ---
 
-## 4. Stage 4 Deployment State (Clarified)
+## 3. Latest Evaluation Artifacts (Finalized in This Cycle)
 
-Validated behavior:
-- /health responds correctly.
-- /compare returns 400 on invalid non-PE input.
-- /compare returns 200 with full payload on valid PE input.
+Stage 3 all-model fixed-set run:
+- run_logs/stage3_fixed_eval_all_three_models_20260411_001931.log
+- Project_Resourse/logs/fixed_adv_eval_all_three_models_20260411_001931.txt
+- Project_Resourse/logs/stage3_complete_comparison_all3_20260411_001931.txt
 
-Networking clarification from direct testing:
-- --network=none with -p was not browser-reachable in this environment.
-- Bridge networking with -p is required for localhost demo access.
+Stage 2 clean-only 3C2D run:
+- run_logs/stage2_eval_3c2d_clean_only_20260411_002438.log
+- Project_Resourse/logs/stage2_eval_3c2d_clean_only_20260411_002438.txt
 
-Interpretation:
-- Docker setup is currently sufficient for reproducible Stage 4 inference/demo delivery.
-- Full training reproducibility across new machines still requires separate environment and data regeneration protocol.
-
----
-
-## 5. Open Problems / Unchecked Requirements
-
-1) Cross-split overlap risk still open.
-2) One final audit pass with updated metric scripts is still pending.
-3) Stage 4 committee demo bundle is not packaged yet.
-4) Sidecar provenance file for current best PGD artifact is not materialized yet.
-5) Large unrelated untracked files remain in workspace and must stay outside scoped commits.
+Reconstructed training completeness artifacts:
+- Project_Resourse/logs/3C2D_MaleX_clean_Baseline.txt
+- Project_Resourse/logs/Resnet18_MaleX_clean_Baseline.txt
+- Project_Resourse/logs/adversarial_training_log_3c2d_reconstructed.txt
+- Project_Resourse/logs/adversarial_training_log_fgsm_reconstructed.txt
+- Project_Resourse/logs/training_curve_3c2d_clean_baseline.png
+- Project_Resourse/logs/training_curve_resnet18_malex_clean_baseline.png
 
 ---
 
-## 6. Immediate Next Actions
+## 4. Latest 3-Model Metrics Summary (Fixed Adversarial Set)
 
-1) Run final evaluation bundle and archive dated logs/results.
-2) Close split-overlap risk and rerun verification scripts.
-3) Build reproducible Stage 4 demo appendix package (samples + commands + outputs).
-4) Generate/checkpoint best-weights sidecar metadata for final defended model provenance.
+| Model | Clean Accuracy | FGSM Recall | FGSM Evasion | PGD Recall | PGD Evasion |
+|---|---:|---:|---:|---:|---:|
+| 3C2D Clean | 85.2927% | 15.29% | 84.71% | 0.53% | 99.47% |
+| 3C2D AT (PGD) | 80.0297% | 74.97% | 25.03% | 74.94% | 25.06% |
+| 3C2D AT (FGSM) | 77.9633% | 68.92% | 31.08% | 68.81% | 31.19% |
+
+---
+
+## 5. What Changed In This Update Window
+
+Updated script:
+- Project_Resourse/adversarial_train_fgsm.py
+
+Added behavior:
+- FGSM_NUM_EPOCHS env override
+- FGSM_EARLY_STOP_PATIENCE env override
+- FGSM_RESUME_FROM_BEST_WEIGHTS resume mode
+- Resume flow now supports continuation from checkpoint epoch state while reloading best epoch weights
+
+Why this mattered:
+- Required to continue FGSM from epoch 20, use best epoch-19 weights, append to canonical run log, and stop only when improvement ceased.
+
+---
+
+## 6. Open Problems / Unchecked Requirements
+
+1) Cross-split overlap risk remains open and must be closed before final thesis claims.
+2) Stage 4 committee/demo appendix packaging is still pending.
+3) evaluate_base_models_testset.py relative output path is brittle when invoked from Project_Resourse cwd.
+4) Sidecar metadata strategy should be standardized across defended artifacts.
+5) Large unrelated untracked binaries exist in workspace and must remain outside scoped commits.
+
+---
+
+## 7. Immediate Next Actions
+
+1) Keep report tables locked to the 2026-04-11 canonical artifacts.
+2) If additional attack tables are needed, run only against canonical checkpoints.
+3) Close overlap risk and rerun overlap diagnostics.
+4) Package Stage 4 appendix with reproducible command/output evidence.

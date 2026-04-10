@@ -44,15 +44,18 @@ from models import MaleX3C2D
 # CONFIGURATION
 # ============================================================
 BATCH_SIZE = 16
-NUM_EPOCHS = 20
+NUM_EPOCHS = int(os.environ.get("FGSM_NUM_EPOCHS", "20"))
 LEARNING_RATE = 1e-4
-EARLY_STOP_PATIENCE = 5
+EARLY_STOP_PATIENCE = int(os.environ.get("FGSM_EARLY_STOP_PATIENCE", "5"))
 
 # FGSM attack parameter
 ADV_TRAIN_EPS = 0.05
 
 # Resume control
 RESUME_IF_CHECKPOINT_EXISTS = True
+RESUME_FROM_BEST_WEIGHTS = os.environ.get(
+    "FGSM_RESUME_FROM_BEST_WEIGHTS", "0"
+).strip().lower() in {"1", "true", "yes", "y"}
 
 # Paths
 CLEAN_MODEL_PATH = MALEX_3C2D_CLEAN_MODEL_PATH_STR
@@ -264,6 +267,20 @@ def main():
         epochs_no_improve = state["epochs_no_improve"]
         log_lines = state["log_lines"]
         print(f"[*] Resuming from epoch {start_epoch + 1}")
+
+        # Optional continuation mode: keep resume bookkeeping/log continuity,
+        # but restart model weights from the best saved robust checkpoint.
+        if RESUME_FROM_BEST_WEIGHTS:
+            if not os.path.exists(ROBUST_MODEL_PATH):
+                raise FileNotFoundError(
+                    "FGSM_RESUME_FROM_BEST_WEIGHTS=1 was requested, "
+                    f"but best weights are missing at: {ROBUST_MODEL_PATH}"
+                )
+            model.load_state_dict(torch.load(ROBUST_MODEL_PATH, map_location=device))
+            print(
+                "[*] Loaded best robust weights for continuation: "
+                f"{ROBUST_MODEL_PATH} (best epoch {best_epoch})"
+            )
     else:
         print("[*] Starting fresh FGSM adversarial training run.")
     print("-" * 65)

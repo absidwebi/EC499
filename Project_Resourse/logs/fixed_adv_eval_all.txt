@@ -1,0 +1,77 @@
+EC499 - Fixed Adversarial Test Set Evaluation
+Timestamp : 2026-04-11 00:19:32
+Model(s)  : 3c2d, 3c2d_pgd, 3c2d_fgsm
+Device    : cuda
+Adv set   : /home/alucard-00/EC499/Project_Resourse/adversarial_test_set_malex
+
+=================================================================
+Model: 3C2D Clean Baseline
+=================================================================
+
+Clean Test Metrics (full suite):
+Accuracy            : 85.2927%
+Confusion Counts    : TN=14947 FP=2206 FN=2648 TP=13203
+Precision (B/M)     : 0.8495 / 0.8568
+Recall (B/M)        : 0.8714 / 0.8329
+Specificity (TNR)   : 0.8714
+FPR / FNR           : 0.1286 / 0.1671
+Balanced Accuracy   : 0.8522
+MCC                 : 0.7053
+F1 Macro            : 0.8525
+F1 Malware          : 0.8447
+AUC-ROC             : 0.9316
+TPR@FPR<=1% / 5%    : 0.5138 / 0.7018
+
+Adversarial Evaluation (Fixed Test Set):
+Attack                                Recall   Evasion   Correct   Total
+------------------------------------------------------------------------
+fgsm_eps0.05                          15.29%    84.71%      2424   15851
+pgd_eps0.05_steps40                    0.53%    99.47%        84   15851
+
+=================================================================
+Model: 3C2D Adversarially Trained (PGD)
+=================================================================
+
+Clean Test Metrics (full suite):
+Accuracy            : 80.0297%
+Confusion Counts    : TN=14463 FP=2690 FN=3901 TP=11950
+Precision (B/M)     : 0.7876 / 0.8163
+Recall (B/M)        : 0.8432 / 0.7539
+Specificity (TNR)   : 0.8432
+FPR / FNR           : 0.1568 / 0.2461
+Balanced Accuracy   : 0.7985
+MCC                 : 0.6004
+F1 Macro            : 0.7991
+F1 Malware          : 0.7838
+AUC-ROC             : 0.8874
+TPR@FPR<=1% / 5%    : 0.4303 / 0.5615
+
+Adversarial Evaluation (Fixed Test Set):
+Attack                                Recall   Evasion   Correct   Total
+------------------------------------------------------------------------
+fgsm_eps0.05                          74.97%    25.03%     11884   15851
+pgd_eps0.05_steps40                   74.94%    25.06%     11878   15851
+
+=================================================================
+Model: 3C2D Adversarially Trained (FGSM)
+=================================================================
+
+Clean Test Metrics (full suite):
+Accuracy            : 77.9633%
+Confusion Counts    : TN=14596 FP=2557 FN=4716 TP=11135
+Precision (B/M)     : 0.7558 / 0.8132
+Recall (B/M)        : 0.8509 / 0.7025
+Specificity (TNR)   : 0.8509
+FPR / FNR           : 0.1491 / 0.2975
+Balanced Accuracy   : 0.7767
+MCC                 : 0.5612
+F1 Macro            : 0.7772
+F1 Malware          : 0.7538
+AUC-ROC             : 0.8729
+TPR@FPR<=1% / 5%    : 0.3763 / 0.5325
+
+Adversarial Evaluation (Fixed Test Set):
+Attack                                Recall   Evasion   Correct   Total
+------------------------------------------------------------------------
+fgsm_eps0.05                          68.92%    31.08%     10925   15851
+pgd_eps0.05_steps40                   68.81%    31.19%     10907   15851

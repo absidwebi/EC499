@@ -1,0 +1,85 @@
+=================================================================
+  EC499 - Fixed Adversarial Test Set Evaluation
+  Model(s): 3c2d, 3c2d_pgd, 3c2d_fgsm
+  Device  : cuda
+  Adv set : /home/alucard-00/EC499/Project_Resourse/adversarial_test_set_malex
+=================================================================
+
+=================================================================
+  Evaluating: 3C2D Clean Baseline
+=================================================================
+[*] Loaded 3C2D Clean Baseline (1,273,345 params)
+[*] Measuring clean test metrics...
+[*] TRAIN — benign=0, malware=1 -> binary transform applied (287560 images)
+[*] VAL   — benign=0, malware=1 -> binary transform applied (33015 images)
+[*] TEST  — benign=0, malware=1 -> binary transform applied (33004 images)
+[*] Calculating class weights...
+   - Training total    : 287560
+   - Benign  (label 0) : 143780
+   - Malware (label 1) : 143780
+   - Weight benign  : 1.0000
+   - Weight malware : 1.0000
+    Clean accuracy: 85.29%
+    TPR@FPR<=1%: 0.5138 | MCC: 0.7053
+[*] Evaluating on fixed set: fgsm_eps0.05...
+    Recall=15.29%  Evasion=84.71%  (2424/15851)
+[*] Evaluating on fixed set: pgd_eps0.05_steps40...
+    Recall=0.53%  Evasion=99.47%  (84/15851)
+
+=================================================================
+  Evaluating: 3C2D Adversarially Trained (PGD)
+=================================================================
+[*] Loaded 3C2D Adversarially Trained (PGD) (1,273,345 params)
+[*] Measuring clean test metrics...
+[*] TRAIN — benign=0, malware=1 -> binary transform applied (287560 images)
+[*] VAL   — benign=0, malware=1 -> binary transform applied (33015 images)
+[*] TEST  — benign=0, malware=1 -> binary transform applied (33004 images)
+[*] Calculating class weights...
+   - Training total    : 287560
+   - Benign  (label 0) : 143780
+   - Malware (label 1) : 143780
+   - Weight benign  : 1.0000
+   - Weight malware : 1.0000
+    Clean accuracy: 80.03%
+    TPR@FPR<=1%: 0.4303 | MCC: 0.6004
+[*] Evaluating on fixed set: fgsm_eps0.05...
+    Recall=74.97%  Evasion=25.03%  (11884/15851)
+[*] Evaluating on fixed set: pgd_eps0.05_steps40...
+    Recall=74.94%  Evasion=25.06%  (11878/15851)
+
+=================================================================
+  Evaluating: 3C2D Adversarially Trained (FGSM)
+=================================================================
+[*] Loaded 3C2D Adversarially Trained (FGSM) (1,273,345 params)
+[*] Measuring clean test metrics...
+[*] TRAIN — benign=0, malware=1 -> binary transform applied (287560 images)
+[*] VAL   — benign=0, malware=1 -> binary transform applied (33015 images)
+[*] TEST  — benign=0, malware=1 -> binary transform applied (33004 images)
+[*] Calculating class weights...
+   - Training total    : 287560
+   - Benign  (label 0) : 143780
+   - Malware (label 1) : 143780
+   - Weight benign  : 1.0000
+   - Weight malware : 1.0000
+    Clean accuracy: 77.96%
+    TPR@FPR<=1%: 0.3763 | MCC: 0.5612
+[*] Evaluating on fixed set: fgsm_eps0.05...
+    Recall=68.92%  Evasion=31.08%  (10925/15851)
+[*] Evaluating on fixed set: pgd_eps0.05_steps40...
+    Recall=68.81%  Evasion=31.19%  (10907/15851)
+
+================================================================================
+  COMPARISON TABLE - Clean vs Defended Models
+================================================================================
+Attack                                3C2D Clean B            PGD           FGSM
+--------------------------------------------------------------------------------
+Clean Accuracy                              85.29%         80.03%         77.96%
+fgsm_eps0.05 (Recall)                       15.29%         74.97%         68.92%
+fgsm_eps0.05 (Evasion)                      84.71%         25.03%         31.08%
+pgd_eps0.05_steps40 (Recall)                 0.53%         74.94%         68.81%
+pgd_eps0.05_steps40 (Evasion)               99.47%         25.06%         31.19%
+================================================================================
+
+[*] Run log  : /home/alucard-00/EC499/run_logs/fixed_adv_eval_all_20260411_001932.log
+[*] Perm log : /home/alucard-00/EC499/Project_Resourse/logs/fixed_adv_eval_all.txt
+[DONE] Evaluation complete.
