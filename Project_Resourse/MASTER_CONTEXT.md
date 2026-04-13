@@ -193,7 +193,11 @@ All five diagnostics were run on the biased dataset results. Results documented 
 - **Python:** 3.10.12 via `/home/alucard-00/EC499/Project_Resourse/venv/`
 - **GPU:** RTX 4060, 8 GB VRAM
 - **PyTorch:** 2.x with CUDA
-- **Training time:** ~12 min per epoch (clean), ~6 min per epoch (AT with 7-step PGD)
+- **Batch sizes (verified):** clean training = 64; adversarial training (PGD and FGSM) = 16.
+- **Training time (verified from run logs):** clean 3C2D is ~12.5 min/epoch (626.22 min over 50 epochs).
+- **Training time (verified from run logs):** FGSM AT is ~21-22 min/epoch (445.59 min over 20 epochs; continuation 250.60 min over 12 epochs).
+- **Training time (verified from run logs):** PGD AT (7-step) is ~77 min/epoch (1154.67 min over 15 epochs, 1159.46 min over 15 epochs, 387.46 min over 5 epochs).
+- **Interpretation note:** `Elapsed: X min` in adversarial logs is cumulative within each resumed run segment.
 
 ---
 
