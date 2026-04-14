@@ -1,6 +1,6 @@
 flask>=2.0
 opencv-python-headless>=4.5
-pefile>=2022.5.30
+pefile==2023.2.7
 Pillow>=9.0
 numpy>=1.21
 # CPU-only torch - much smaller than full CUDA version (800 MB vs 3.5 GB)

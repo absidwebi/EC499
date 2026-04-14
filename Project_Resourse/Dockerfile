@@ -19,7 +19,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir \
         flask>=2.0 \
-        pefile \
+        pefile==2023.2.7 \
         opencv-python-headless \
         Pillow \
         numpy==1.26.4 && \
