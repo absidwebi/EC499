@@ -1,6 +1,6 @@
 # EC499 Folder Structure Overview
 
-Last updated: 2026-04-11 (aligned with finalized 3-model Stage 3 comparison and FGSM continuation)
+Last updated: 2026-04-20 (Stage 4 dependency stabilization + report figure finalization sync)
 
 This document maps the current workspace layout and highlights canonical files for reporting and reproducibility.
 
@@ -143,3 +143,34 @@ Remaining tasks:
 1) Resolve cross-split overlap risk and rerun diagnostics.
 2) Package final Stage 4 thesis demo appendix bundle.
 3) Keep commit scope tight around docs/code/log summaries, excluding large binaries.
+
+---
+
+## 9. Delta Since 2026-04-11 (Current as of 2026-04-20)
+
+Source-repo tracked changes after the previous context baseline:
+- `Project_Resourse/Dockerfile` updated to pin `pefile==2023.2.7` in container install steps.
+- `Project_Resourse/requirements_inference.txt` updated to pin `pefile==2023.2.7`.
+- No tracked `.py` script changes landed in `stage4-demo` during this window.
+
+Report-production artifacts completed in `EC499-Report/Project_Resourse/logs/report_figures/`:
+- `cnn_architecture_3c2d.png`
+- `fgsm_attack_diagram.png`
+- `pgd_attack_diagram.png`
+- `tsne_embedding_3c2d.png`
+- `pipeline_flowchart.png`
+- `docker_architecture.png`
+- Supporting visuals: ROC/CM/robustness/Grad-CAM and deployment screenshots
+
+Current operational caveats:
+- Source workspace currently has local tracked modifications outside this doc update scope:
+  `Project_Resourse/base_model_testset_results.json`,
+  `Project_Resourse/models/3c2d_malex_fgsm_adversarially_trained.pth`,
+  `Project_Resourse/templates/index.html`.
+- Figure regeneration scripts used during layout iteration were executed from `/tmp/*.py` and are not version-controlled artifacts.
+
+Canonical context mirror locations:
+- Source repo docs: `EC499_Folder_Structure.md`, `Project_Resourse/PROJECT_CONTEXT.md`,
+  `Project_Resourse/CURRENT_STATE.md`, `Project_Resourse/MASTER_CONTEXT.md`
+- Report repo mirrors: `EC499-Report/EC499_Folder_Structure.md`, `EC499-Report/PROJECT_CONTEXT.md`,
+  `EC499-Report/CURRENT_STATE.md`, `EC499-Report/MASTER_CONTEXT.md`

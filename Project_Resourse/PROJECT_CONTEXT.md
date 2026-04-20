@@ -6,7 +6,7 @@ GitHub: https://github.com/absidwebi/EC499
 Primary machine: Ubuntu Linux, RTX 4060, /home/alucard-00/EC499
 Primary interpreter: /home/alucard-00/EC499/venv/bin/python
 
-Last updated: 2026-04-11 (FGSM continuation finalized + Stage 2/Stage 3 metric pack refreshed)
+Last updated: 2026-04-20 (context sync with Stage 4 dependency pin + report figure finalization cycle)
 
 ---
 
@@ -222,3 +222,72 @@ Environment note:
 2) Re-run any remaining final audit scripts only against canonical checkpoints.
 3) Resolve cross-split overlap risk and refresh diagnostics once complete.
 4) Assemble Stage 4 appendix package (sample files, exact commands, expected output captures).
+
+---
+
+## 11. Delta Update (2026-04-11 -> 2026-04-20)
+
+### 11.1 Source-repo tracked code/config changes
+
+Commits after the 2026-04-11 baseline for these docs:
+- `4265297` (2026-04-13): corrected training-time and batch-size notes in `MASTER_CONTEXT.md`.
+- `856b148` (2026-04-14): pinned `pefile==2023.2.7` for Stage 4 Docker inference consistency.
+
+Files changed in source repo during this window:
+- `Project_Resourse/Dockerfile`
+- `Project_Resourse/requirements_inference.txt`
+
+Tracked Python-script delta in this window:
+- None (`git diff bbf2698..HEAD -- '*.py'` is empty).
+
+### 11.2 Report-generation work completed (EC499-Report)
+
+Figure pipeline and layout refinement commits were completed in `EC499-Report` between 2026-04-15 and 2026-04-18.
+
+Key generated/finalized report figures:
+- `Project_Resourse/logs/report_figures/cnn_architecture_3c2d.png`
+- `Project_Resourse/logs/report_figures/fgsm_attack_diagram.png`
+- `Project_Resourse/logs/report_figures/pgd_attack_diagram.png`
+- `Project_Resourse/logs/report_figures/tsne_embedding_3c2d.png`
+- `Project_Resourse/logs/report_figures/pipeline_flowchart.png`
+- `Project_Resourse/logs/report_figures/docker_architecture.png`
+- Supplementary visuals (confusion matrices, ROC curves, robustness bar, Grad-CAM, web UI and docker screenshots)
+
+Final t-SNE state for report:
+- The inter-panel "PGD attack ->" connector text is removed in the final figure.
+- Cluster-separation annotation text was removed from panel stats to avoid over-claiming t-SNE geometry.
+- Final report commit containing the text-removal outcome: `c8a4819` in `EC499-Report`.
+
+### 11.3 Results status after this update window
+
+Stage 2 / Stage 3 quantitative conclusions remain unchanged from the 2026-04-11 canonical evaluation artifacts:
+- Clean 3C2D: 85.2927% clean accuracy.
+- PGD-AT 3C2D: strongest fixed-set robustness (~74.9% malware recall under FGSM and PGD).
+- FGSM-AT 3C2D: improved post-continuation robustness versus pre-continuation state.
+
+What changed in this window is reproducibility and reporting quality:
+- Inference dependency pinning for stable Stage 4 container behavior.
+- Report figure set expanded and visually corrected for thesis-ready presentation.
+
+### 11.4 Current problems and risks (live)
+
+1) Cross-split overlap remediation is still open and remains the top methodological risk.
+2) Stage 4 committee/demo appendix packaging is still pending.
+3) `evaluate_base_models_testset.py` still has a CWD-sensitive output-path assumption.
+4) Source workspace currently has local tracked changes outside this context-sync task:
+   `Project_Resourse/base_model_testset_results.json`,
+   `Project_Resourse/models/3c2d_malex_fgsm_adversarially_trained.pth`,
+   `Project_Resourse/templates/index.html`.
+5) Figure-generation helper scripts used during this cycle were `/tmp/*.py` operational scripts and are not version-controlled.
+
+### 11.5 Planning-agent handoff notes
+
+Primary branches at this checkpoint:
+- Source: `EC499` on `stage4-demo`
+- Report: `EC499-Report` on `main`
+
+Canonical context mirrors maintained in both repos:
+- Source paths: `EC499_Folder_Structure.md`, `Project_Resourse/PROJECT_CONTEXT.md`,
+  `Project_Resourse/CURRENT_STATE.md`, `Project_Resourse/MASTER_CONTEXT.md`
+- Report paths: `EC499_Folder_Structure.md`, `PROJECT_CONTEXT.md`,
+  `CURRENT_STATE.md`, `MASTER_CONTEXT.md`

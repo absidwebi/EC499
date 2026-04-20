@@ -2,6 +2,8 @@
 # EC499 — Master Decision Log & Lessons Learned
 **Running record of key decisions, bugs found, fixes applied, and insights gained**
 
+Last updated: 2026-04-20
+
 ---
 
 ## Decision Log
@@ -1044,3 +1046,160 @@ Key results:
 ### E4. Reporting completeness artifacts refreshed
 - Clean baseline epoch logs and curves reconstructed from `run_logs/`.
 - PGD/FGSM reconstructed per-epoch summaries produced for appendix/audit workflow.
+
+---
+
+## 2026-04-20 Delta Update (Stage 4 Dependency Stabilization + Report Figure Finalization)
+
+### D36 - Pin `pefile` for deterministic Stage 4 container behavior
+Decision:
+- Pin `pefile==2023.2.7` in inference dependencies used by Dockerized Stage 4 demo paths.
+
+Reason:
+- Keep PE parsing behavior consistent between local runs and containerized inference.
+
+Outcome:
+- Commit `856b148` updated:
+	- `Project_Resourse/requirements_inference.txt`
+	- `Project_Resourse/Dockerfile`
+- No Stage 2/Stage 3 model metrics changed as a consequence.
+
+### D37 - Keep source pipeline stable while doing report-layout iteration in report repo
+Decision:
+- Perform rapid figure layout iteration in `EC499-Report`, while keeping `EC499` source branch changes minimal.
+
+Reason:
+- Avoid mixing heavy report-asset churn with model/pipeline source changes.
+
+Outcome:
+- Source repo (`stage4-demo`) had no tracked `.py` changes in this window.
+- Report repo (`main`) captured the figure-iteration commit sequence.
+
+### D38 - Remove t-SNE inter-panel attack connector text in final figure
+Decision:
+- Remove the panel connector text ("PGD attack ->") from the final t-SNE figure entirely.
+
+Reason:
+- Final presentation requirement and visual clarity.
+
+Outcome:
+- Finalized in `EC499-Report` commit `c8a4819`.
+- Final artifact path: `Project_Resourse/logs/report_figures/tsne_embedding_3c2d.png`.
+
+### D39 - Remove cluster-separation messaging from t-SNE panel annotations
+Decision:
+- Keep only performance-oriented annotation text under the panels; remove cluster-separation statements.
+
+Reason:
+- Prevent over-interpretation of 2D t-SNE geometry as a standalone robustness metric.
+
+Outcome:
+- Applied in `EC499-Report` commit `f8860c7`.
+
+### D40 - Treat `/tmp` figure scripts as operational only
+Decision:
+- Use `/tmp/*.py` for short-lived rendering/debug loops only.
+
+Reason:
+- Speed up visual iteration without polluting the source repo tree.
+
+Outcome:
+- Final reproducible state is represented by committed report artifacts and documented generation instructions.
+
+---
+
+## Additional Bug Log Entries (2026-04-20)
+
+### Bug 28 - Matplotlib mathtext parse failure using `\\xrightarrow{...}`
+Symptom:
+- t-SNE generation reached save stage, then failed with `Unknown symbol: \\xrightarrow` during `savefig`.
+
+Cause:
+- Current matplotlib mathtext parser in this environment does not support the used `\\xrightarrow{...}` syntax.
+
+Fix:
+- Removed the mathtext arrow pathway and finalized the figure without the connector text.
+
+Impact:
+- t-SNE figure saves reliably in both PNG and PDF outputs.
+
+### Bug 29 - FGSM operator-label overlap
+Symptom:
+- FGSM panel operator labels (e.g., `sign()` / epsilon terms) overlapped panel content.
+
+Cause:
+- Hard-coded text coordinates not aligned to panel boundaries.
+
+Fix:
+- Repositioned labels between panels and regenerated figure assets.
+
+Impact:
+- Final FGSM diagram is readable and report-ready.
+
+### Bug 30 - 3C2D architecture annotation collision
+Symptom:
+- `AdaptiveAvgPool2d` and output/logit annotations had spacing collisions.
+
+Cause:
+- Annotation block spacing did not account for nearby dimension text.
+
+Fix:
+- Adjusted vertical/horizontal placement and regenerated architecture figure.
+
+Impact:
+- Final 3C2D architecture figure has legible labels and stable layout.
+
+### Bug 31 - Terminal sprawl and stale-script confusion during repeated figure regeneration
+Symptom:
+- Many open shells and repeated script variants increased risk of regenerating with stale code.
+
+Cause:
+- Iterative visual-fix loop used multiple temporary scripts and repeated runs.
+
+Fix:
+- Switched to targeted script inspection and single active runtime script patching before final reruns.
+
+Impact:
+- Final t-SNE artifact now matches the requested no-connector specification.
+
+---
+
+## 2026-04-20 Execution Snapshot
+
+### E5. Source repo tracked deltas after previous doc baseline
+- `4265297`: corrected training-time/batch-size notes in `MASTER_CONTEXT.md`.
+- `856b148`: pinned inference dependency (`pefile==2023.2.7`) in Docker + inference requirements.
+- No tracked `.py` commits in this window.
+
+### E6. Report figure pipeline completion highlights (`EC499-Report`)
+Key commit chain (latest first):
+- `c8a4819` remove t-SNE connector text
+- `f8860c7` remove t-SNE cluster-separation annotations
+- `5165fde` adjust t-SNE PGD label placement
+- `8c167a1` add t-SNE embedding figure
+- `d772480` adjust 3C2D architecture spacing
+- `39cc063` fix FGSM operator label placement
+- `c7ecd33` add CNN/FGSM/PGD attack diagrams
+
+Final report figure directory includes updated artifacts:
+- `tsne_embedding_3c2d.png`
+- `cnn_architecture_3c2d.png`
+- `fgsm_attack_diagram.png`
+- `pgd_attack_diagram.png`
+- `pipeline_flowchart.png`
+- `docker_architecture.png`
+
+### E7. Current active risks
+1) Cross-split overlap remediation is still open.
+2) Stage 4 appendix packaging remains pending.
+3) `evaluate_base_models_testset.py` path sensitivity remains open.
+4) Source workspace currently contains local tracked modifications outside this context-sync update:
+	 - `Project_Resourse/base_model_testset_results.json`
+	 - `Project_Resourse/models/3c2d_malex_fgsm_adversarially_trained.pth`
+	 - `Project_Resourse/templates/index.html`
+5) `/tmp` helper scripts are not version-controlled and should not be treated as canonical source artifacts.
+
+### E8. Immediate tactical next actions
+1) Close overlap diagnostics and document post-fix integrity evidence.
+2) Freeze Stage 4 demo appendix bundle with exact reproducible command list.
+3) Keep source-repo commits scoped to code/config; keep report-only figure churn in report repo.

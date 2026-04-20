@@ -1,6 +1,6 @@
 # EC499 - Current Project State
 
-Last updated: 2026-04-11 (FGSM continuation completion + Stage 2/3 final metric refresh)
+Last updated: 2026-04-20 (source/report context sync after figure finalization cycle)
 
 ---
 
@@ -101,3 +101,47 @@ Why this mattered:
 2) If additional attack tables are needed, run only against canonical checkpoints.
 3) Close overlap risk and rerun overlap diagnostics.
 4) Package Stage 4 appendix with reproducible command/output evidence.
+
+---
+
+## 8. Delta State (2026-04-11 -> 2026-04-20)
+
+### 8.1 Source repository (`EC499`, branch `stage4-demo`)
+
+Tracked changes in this window:
+- `Project_Resourse/Dockerfile` updated to pin `pefile==2023.2.7`.
+- `Project_Resourse/requirements_inference.txt` updated to pin `pefile==2023.2.7`.
+- No tracked `.py` file changes were committed in this window.
+
+Interpretation:
+- Core model-training/evaluation logic is stable relative to the 2026-04-11 canonical metrics.
+- This window focused on deployment reproducibility and report figure quality.
+
+### 8.2 Report repository (`EC499-Report`, branch `main`)
+
+Completed report updates:
+- Added and refined architecture/attack/deployment figures.
+- Added and iteratively corrected t-SNE figure until final layout requirements were met.
+
+Final t-SNE status:
+- Final artifact: `Project_Resourse/logs/report_figures/tsne_embedding_3c2d.png`
+- "PGD attack ->" overlay text is fully removed.
+- Cluster-separation annotation text removed from panel stats.
+- Latest commit carrying the finalized text-removal state: `c8a4819`.
+
+### 8.3 Current known issues (active)
+
+1) Cross-split overlap risk remains unresolved.
+2) Stage 4 final appendix packaging remains pending.
+3) `evaluate_base_models_testset.py` output path remains CWD-sensitive.
+4) Source working tree currently has tracked local modifications outside this sync task:
+	`Project_Resourse/base_model_testset_results.json`,
+	`Project_Resourse/models/3c2d_malex_fgsm_adversarially_trained.pth`,
+	`Project_Resourse/templates/index.html`.
+5) Figure-generation helper scripts in this cycle were `/tmp/*.py` operational scripts (not tracked in repo).
+
+### 8.4 Immediate execution priorities
+
+1) Resolve overlap diagnostics and refresh dataset-integrity evidence.
+2) Freeze Stage 4 demo package contents (commands, sample files, expected outputs).
+3) Keep source commits narrowly scoped and avoid mixing report-only artifact churn into pipeline code commits.
